@@ -1,0 +1,5 @@
+START = "start"
+REGISTER = "register"
+QUESTIONS = "questions"
+CANCEL = "cancel"
+EDIT = "edit"

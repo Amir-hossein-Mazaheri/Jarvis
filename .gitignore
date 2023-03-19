@@ -1,3 +1,6 @@
 .env
 *.log
 *.local
+conversation.py
+quiz.py
+__pycache__
