@@ -26,6 +26,7 @@ model Question {
     options    QuestionOption[]
     score      Int
     created_at DateTime         @default(now())
+    deadline   DateTime
     // c means it relates to correct answered questions
     c_user     User?            @relation("correct_questions", fields: [c_user_id], references: [id])
     c_user_id  Int?
