@@ -7,7 +7,7 @@ from src.utils.db import db
 from src.utils.get_next_question_id import get_next_question_id
 from src.utils.show_questions_result import show_questions_result
 from src.constants.states import QuestionStates
-from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY
+from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY
 
 
 async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -23,6 +23,8 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     })
 
+    questions_count = await db.question.count()
+
     keyboard = ReplyKeyboardMarkup(
         list(map(lambda option: [option.label], question.options)), one_time_keyboard=True, input_field_placeholder="Pick one...")
 
@@ -34,6 +36,7 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text=text, reply_markup=keyboard)
 
     ctx.user_data[QUESTION_ID_KEY] = question.id
+    ctx.user_data[TOTAL_QUESTIONS_KEY] = questions_count
 
     return QuestionStates.ANSWER_VALIDATOR
 
@@ -94,17 +97,19 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             }
         )
 
+    # Decrement from total questions count
+    # its useful for showing unanswered questions count
+    total_questions_count = ctx.user_data.get(TOTAL_QUESTIONS_KEY)
+    ctx.user_data[TOTAL_QUESTIONS_KEY] = total_questions_count - 1
+
     next_question_id = await get_next_question_id(question_id)
 
     if not bool(next_question_id):
-        correct_answers = ctx.user_data.get(CORRECT_QUESTIONS_KEY)
-        wrong_answers = ctx.user_data.get(WRONG_QUESTIONS_KEY)
-
-        return await show_questions_result(update, correct_answers, wrong_answers)
+        return await show_questions_result(update, ctx)
 
     ctx.user_data[NEXT_QUESTION_ID_KEY] = next_question_id
 
-    return QuestionStates.GET_NEXT_QUESTION
+    return await get_next_question(update, ctx)
 
 
 async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -135,11 +140,19 @@ async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    pass
+    question_id = ctx.user_data.get(QUESTION_ID_KEY)
+    next_question_id = await get_next_question_id(question_id)
+
+    if not bool(next_question_id):
+        return await show_questions_result(update, ctx)
+
+    ctx.user_data[NEXT_QUESTION_ID_KEY] = next_question_id
+
+    return await get_next_question(update, ctx)
 
 
 async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    pass
+    return show_questions_result(update, ctx)
 
 
 async def cancel_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):

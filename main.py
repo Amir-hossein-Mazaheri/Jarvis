@@ -58,12 +58,10 @@ def main():
         entry_points=[CommandHandler(QUESTIONS, send_questions)],
         states={
             QuestionStates.SHOW_QUESTIONS: [CommandHandler(QUESTIONS, send_questions)],
-            QuestionStates.ANSWER_VALIDATOR: [
-                MessageHandler(filters.TEXT, answer_validator)],
-            QuestionStates.GET_NEXT_QUESTION: [
-                CommandHandler(NEXT_QUESTION, get_next_question)],
-            QuestionStates.SKIP_QUESTION: [CommandHandler(SKIP_QUESTIONS, skip_question)],
-            QuestionStates.QUIT_QUESTIONS: [CommandHandler(QUIT_QUESTIONS,  quit_questions)]
+            QuestionStates.ANSWER_VALIDATOR: [CommandHandler(SKIP_QUESTIONS, skip_question),
+                                              CommandHandler(
+                                                  QUIT_QUESTIONS, quit_questions),
+                                              MessageHandler(filters.TEXT & (~filters.COMMAND), answer_validator)],
         },
         fallbacks=[CommandHandler(CANCEL, cancel_questions)]
     )
