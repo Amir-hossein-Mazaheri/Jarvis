@@ -10,29 +10,27 @@ datasource db {
 }
 
 model User {
-    id                         Int        @id @default(autoincrement())
-    tel_id                     BigInt     @unique
+    id                         Int            @id @default(autoincrement())
+    tel_id                     BigInt         @unique
     name                       String
-    nickname                   String     @db.VarChar(255)
-    student_code               String     @db.VarChar(20)
-    correct_answered_questions Question[] @relation("correct_questions")
-    wrong_answered_questions   Question[] @relation("wrong_questions")
-    created_at                 DateTime   @default(now())
+    nickname                   String         @db.VarChar(255)
+    student_code               String         @db.VarChar(20)
+    correct_answered_questions Question[]     @relation("correct_questions")
+    wrong_answered_questions   Question[]     @relation("wrong_questions")
+    created_at                 DateTime       @default(now())
+    answered_questions_box     QuestionsBox[]
 }
 
 model Question {
-    id         Int              @id @default(autoincrement())
-    question   String           @db.VarChar(255)
-    options    QuestionOption[]
-    score      Int
-    created_at DateTime         @default(now())
-    deadline   DateTime
-    // c means it relates to correct answered questions
-    c_user     User?            @relation("correct_questions", fields: [c_user_id], references: [id])
-    c_user_id  Int?
-    // w means it relates to wrong answered questions
-    w_user     User?            @relation("wrong_questions", fields: [w_user_id], references: [id])
-    w_user_id  Int?
+    id              Int              @id @default(autoincrement())
+    question        String           @db.VarChar(255)
+    options         QuestionOption[]
+    score           Int
+    created_at      DateTime         @default(now())
+    w_users         User[]           @relation("correct_questions")
+    c_users         User[]           @relation("wrong_questions")
+    question_box_id Int?
+    question_box    QuestionsBox?    @relation(fields: [question_box_id], references: [id])
 }
 
 model QuestionOption {
@@ -41,4 +39,12 @@ model QuestionOption {
     is_answer   Boolean   @default(false)
     question_id Int?
     question    Question? @relation(fields: [question_id], references: [id])
+}
+
+model QuestionsBox {
+    id        Int        @id @default(autoincrement())
+    createdAt DateTime   @default(now())
+    deadline  DateTime
+    questions Question[]
+    users     User[]
 }
