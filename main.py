@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from os import getenv
 import logging
 
+from src.utils.db import connect_to_db
 from telegram.ext import ApplicationBuilder, CommandHandler, ConversationHandler, MessageHandler, filters
 from src.constants.commands import START, REGISTER, CANCEL, EDIT
 from src.constants.other import RegisterMode
@@ -18,7 +19,8 @@ BOT_TOKEN = getenv("BOT_TOKEN")
 
 
 def main():
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    application = ApplicationBuilder().token(
+        BOT_TOKEN).post_init(connect_to_db).build()
 
     start_handler = CommandHandler(START, start)
     register_handler = ConversationHandler(
