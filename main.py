@@ -1,13 +1,16 @@
+from telegram.ext import ApplicationBuilder, CommandHandler, ConversationHandler, MessageHandler, filters, Defaults
+from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from os import getenv
 import logging
 
 from src.utils.db import connect_to_db
-from telegram.ext import ApplicationBuilder, CommandHandler, ConversationHandler, MessageHandler, filters
-from src.constants.commands import START, REGISTER, CANCEL, EDIT
+from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, NEXT_QUESTION, SKIP_QUESTIONS, QUIT_QUESTIONS
 from src.constants.other import RegisterMode
-from src.commands.register import start, ask_for_student_code, register_student_code, register_nickname, cancel_registration, ASK_FOR_STUDENT_CODE, REGISTER_NICKNAME, REGISTER_STUDENT_CODE
-from src.commands.edit import ask_to_edit_what, edit_decider, cancel_edit,  ASK_TO_EDIT_WHAT, EDIT_DECIDER, EDIT_NICKNAME, EDIT_STUDENT_CODE
+from src.constants.states import RegisterStates, EditStates, QuestionStates
+from src.commands.register import start, ask_for_student_code, register_student_code, register_nickname, cancel_registration
+from src.commands.edit import ask_to_edit_what, edit_decider, cancel_edit
+from src.commands.questions import send_questions, cancel_questions, answer_validator, get_next_question, skip_question, quit_questions
 
 # loads .env content into env variables
 load_dotenv()
@@ -19,16 +22,20 @@ BOT_TOKEN = getenv("BOT_TOKEN")
 
 
 def main():
+    defaults = Defaults(parse_mode=ParseMode.HTML,
+                        block=False, disable_notification=True)
+
     application = ApplicationBuilder().token(
-        BOT_TOKEN).post_init(connect_to_db).build()
+        BOT_TOKEN).post_init(connect_to_db).defaults(defaults).build()
 
     start_handler = CommandHandler(START, start)
+
     register_handler = ConversationHandler(
         entry_points=[CommandHandler(REGISTER, ask_for_student_code)],
         states={
-            ASK_FOR_STUDENT_CODE: [CommandHandler(REGISTER, ask_for_student_code)],
-            REGISTER_STUDENT_CODE: [MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
-            REGISTER_NICKNAME: [MessageHandler(
+            RegisterStates.ASK_FOR_STUDENT_CODE: [CommandHandler(REGISTER, ask_for_student_code)],
+            RegisterStates.REGISTER_STUDENT_CODE: [MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
+            RegisterStates.REGISTER_NICKNAME: [MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.CREATE))]
         },
         fallbacks=[CommandHandler(CANCEL, cancel_registration)]
@@ -37,19 +44,34 @@ def main():
     edit_handler = ConversationHandler(
         entry_points=[CommandHandler(EDIT, ask_to_edit_what)],
         states={
-            ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
-            EDIT_DECIDER: [MessageHandler(filters.TEXT, edit_decider)],
-            EDIT_STUDENT_CODE: [MessageHandler(
+            EditStates.ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
+            EditStates.EDIT_DECIDER: [MessageHandler(filters.TEXT, edit_decider)],
+            EditStates.EDIT_STUDENT_CODE: [MessageHandler(
                 filters.TEXT, register_student_code(RegisterMode.EDIT))],
-            EDIT_NICKNAME: [MessageHandler(
+            EditStates.EDIT_NICKNAME: [MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.EDIT))]
         },
         fallbacks=[CommandHandler(CANCEL, cancel_edit)]
     )
 
+    question_handler = ConversationHandler(
+        entry_points=[CommandHandler(QUESTIONS, send_questions)],
+        states={
+            QuestionStates.SHOW_QUESTIONS: [CommandHandler(QUESTIONS, send_questions)],
+            QuestionStates.ANSWER_VALIDATOR: [
+                MessageHandler(filters.TEXT, answer_validator)],
+            QuestionStates.GET_NEXT_QUESTION: [
+                CommandHandler(NEXT_QUESTION, get_next_question)],
+            QuestionStates.SKIP_QUESTION: [CommandHandler(SKIP_QUESTIONS, skip_question)],
+            QuestionStates.QUIT_QUESTIONS: [CommandHandler(QUIT_QUESTIONS,  quit_questions)]
+        },
+        fallbacks=[CommandHandler(CANCEL, cancel_questions)]
+    )
+
     application.add_handler(start_handler)
     application.add_handler(register_handler)
     application.add_handler(edit_handler)
+    application.add_handler(question_handler)
 
     application.run_polling()
 
