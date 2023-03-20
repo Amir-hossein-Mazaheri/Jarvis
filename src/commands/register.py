@@ -1,6 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+from src.utils.db import db
+from src.utils.is_user_registered import is_user_registered
 from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode
 from src.commands.edit import EDIT_STUDENT_CODE
 
@@ -12,6 +14,13 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    if await is_user_registered(user_id):
+        await update.message.reply_text(text="You already registered, if you want to edit your info use /edit command.")
+
+        return ConversationHandler.END
+
     await update.message.reply_text(text="This step in needed for registering your info, please send me your student number")
 
     return REGISTER_STUDENT_CODE
@@ -25,7 +34,8 @@ def register_student_code(mode: RegisterMode):
     """
 
     async def register_student_code_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        username = update.effective_user.username.lower()
+        user_id = update.effective_user.id
+        name = update.effective_user.name
         student_code = update.message.text
 
         if len(student_code) != STUDENT_CODE_LENGTH:
@@ -36,7 +46,22 @@ def register_student_code(mode: RegisterMode):
             else:
                 return EDIT_STUDENT_CODE
 
-        # TODO: add logic for saving student number with username
+        await db.user.upsert(
+            where={
+                "tel_id": user_id,
+            },
+            data={
+                "create": {
+                    "tel_id": user_id,
+                    "student_code": student_code,
+                    "name": name,
+                    "nickname": name,
+                },
+                "update": {
+                    "student_code": student_code
+                }
+            }
+        )
 
         reply_text = ""
 
@@ -57,10 +82,17 @@ def register_student_code(mode: RegisterMode):
 
 def register_nickname(mode: RegisterMode):
     async def register_nickname_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        username = update.effective_user.username.lower()
+        user_id = update.effective_user.id
         nickname = update.message.text
 
-        # TODO: add logic to sign nickname to user
+        await db.user.update(
+            where={
+                "tel_id": user_id
+            },
+            data={
+                "nickname": nickname
+            }
+        )
 
         reply_text = ""
 
