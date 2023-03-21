@@ -1,6 +1,5 @@
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
-from prisma.models import QuestionOption
 from datetime import datetime
 import json
 
@@ -10,11 +9,18 @@ from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
 from src.constants.states import QuestionStates
 from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY
-from src.constants.commands import SKIP_QUESTIONS, QUIT_QUESTIONS
+from src.constants.commands import SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS
 
 
-async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+
+    keyboard = InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("Start", callback_data=START_QUESTIONS), InlineKeyboardButton(
+                "Cancel", callback_data=CANCEL_QUESTIONS)]
+        ]
+    )
 
     question_box = await db.questionsbox.find_first(
         where={
@@ -29,12 +35,22 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         })
 
     if not bool(question_box):
-        await update.message.reply_text(text="Sorry there is no question to show you, you answered all of them either there is no question")
+        await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Sorry there is no question to show you, you answered all of them either there is no question")
         return ConversationHandler.END
+
+    await update.message.reply_text("Are you sure that you want to start question?", reply_markup=keyboard)
+
+    ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
+
+    return QuestionStates.SHOW_QUESTIONS
+
+
+async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
 
     question = await db.question.find_first(
         where={
-            "question_box_id": question_box.id
+            "question_box_id": question_box_id
         },
         order={
             "created_at": "desc"
@@ -47,13 +63,12 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     keyboard = ReplyKeyboardMarkup(
         [['/' + SKIP_QUESTIONS], ['/' + QUIT_QUESTIONS]])
 
-    await update.message.reply_text(text="Here the list of this period questions...", reply_markup=keyboard)
+    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Here the list of this period questions...", reply_markup=keyboard)
 
-    questions_count = await db.question.count(where={"question_box_id": question_box.id})
+    questions_count = await db.question.count(where={"question_box_id": question_box_id})
 
     await show_question(update, ctx, question.question, question.options)
 
-    ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
     ctx.user_data[QUESTION_ID_KEY] = question.id
     ctx.user_data[TOTAL_QUESTIONS_KEY] = questions_count
     ctx.user_data[SEEN_QUESTIONS_KEY] = json.dumps([question.id])
@@ -175,6 +190,6 @@ async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(text="questions has been canceled")
+    await ctx.bot.send_message(update.effective_chat.id, "questions has been canceled")
 
     return ConversationHandler.END

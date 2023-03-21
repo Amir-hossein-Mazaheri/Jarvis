@@ -6,12 +6,12 @@ import logging
 import re
 
 from src.utils.db import connect_to_db
-from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, NEXT_QUESTION, SKIP_QUESTIONS, QUIT_QUESTIONS
+from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates
 from src.commands.register import start, ask_for_student_code, register_student_code, register_nickname, cancel_registration
 from src.commands.edit import ask_to_edit_what, edit_decider, cancel_edit
-from src.commands.questions import send_questions, cancel_questions, answer_validator, get_next_question, skip_question, quit_questions
+from src.commands.questions import send_questions, cancel_questions, answer_validator, skip_question, quit_questions, prep_phase
 
 # loads .env content into env variables
 load_dotenv()
@@ -56,9 +56,9 @@ def main():
     )
 
     question_handler = ConversationHandler(
-        entry_points=[CommandHandler(QUESTIONS, send_questions)],
+        entry_points=[CommandHandler(QUESTIONS, prep_phase)],
         states={
-            QuestionStates.SHOW_QUESTIONS: [CommandHandler(QUESTIONS, send_questions)],
+            QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(cancel_questions, CANCEL_QUESTIONS)],
             QuestionStates.ANSWER_VALIDATOR: [CommandHandler(SKIP_QUESTIONS, skip_question),
                                               CommandHandler(QUIT_QUESTIONS, quit_questions
                                                              ),
