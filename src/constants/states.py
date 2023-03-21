@@ -17,3 +17,9 @@ class EditStates(Enum):
 class QuestionStates(Enum):
     SHOW_QUESTIONS = "SHOW_QUESTIONS"
     ANSWER_VALIDATOR = "ANSWER_VALIDATOR"
+
+
+class StatStates(Enum):
+    SHOW_STAT = "SHOW_STAT"
+    DECIDER = "DECIDER"
+    SELECT_QUESTION_BOX = "SELECT_QUESTION_BOX"

@@ -5,12 +5,13 @@ import os
 import logging
 
 from src.utils.db import connect_to_db
-from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS
+from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS, STAT, BACK_TO_STAT
 from src.constants.other import RegisterMode
-from src.constants.states import RegisterStates, EditStates, QuestionStates
+from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates
 from src.commands.register import start, ask_for_student_code, register_student_code, register_nickname, cancel_registration
 from src.commands.edit import ask_to_edit_what, edit_decider, cancel_edit
 from src.commands.questions import send_questions, cancel_questions, answer_validator, skip_question, quit_questions, prep_phase
+from src.commands.other import get_user_stat, cancel_stat, show_question_box_stat, stat_decider
 
 # loads .env content into env variables
 load_dotenv()
@@ -66,10 +67,23 @@ def main():
         fallbacks=[CommandHandler(CANCEL, cancel_questions)]
     )
 
+    stat_handler = ConversationHandler(
+        entry_points=[CommandHandler(STAT, get_user_stat)],
+        states={
+            StatStates.SHOW_STAT: [CallbackQueryHandler(get_user_stat)],
+            StatStates.SELECT_QUESTION_BOX: [
+                CallbackQueryHandler(show_question_box_stat)],
+            StatStates.DECIDER: [CallbackQueryHandler(
+                stat_decider, BACK_TO_STAT)]
+        },
+        fallbacks=[CommandHandler(CANCEL, cancel_stat)]
+    )
+
     application.add_handler(start_handler)
     application.add_handler(register_handler)
     application.add_handler(edit_handler)
     application.add_handler(question_handler)
+    application.add_handler(stat_handler)
 
     application.run_polling()
 
