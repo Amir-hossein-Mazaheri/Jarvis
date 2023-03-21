@@ -6,8 +6,6 @@ from src.utils.is_user_registered import is_user_registered
 from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode
 from src.constants.states import RegisterStates, EditStates
 
-# ASK_FOR_STUDENT_CODE, REGISTER_STUDENT_CODE, REGISTER_NICKNAME = range(3)
-
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text="Welcome to Staff Bot Manger")

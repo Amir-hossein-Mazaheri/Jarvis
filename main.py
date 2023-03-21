@@ -1,9 +1,8 @@
 from telegram.ext import ApplicationBuilder, CommandHandler, ConversationHandler, MessageHandler, filters, Defaults, CallbackQueryHandler
 from telegram.constants import ParseMode
 from dotenv import load_dotenv
-from os import getenv
+import os
 import logging
-import re
 
 from src.utils.db import connect_to_db
 from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS
@@ -19,7 +18,7 @@ load_dotenv()
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-BOT_TOKEN = getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 def main():
@@ -46,7 +45,7 @@ def main():
         entry_points=[CommandHandler(EDIT, ask_to_edit_what)],
         states={
             EditStates.ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
-            EditStates.EDIT_DECIDER: [MessageHandler(filters.TEXT, edit_decider)],
+            EditStates.EDIT_DECIDER: [CallbackQueryHandler(edit_decider)],
             EditStates.EDIT_STUDENT_CODE: [MessageHandler(
                 filters.TEXT, register_student_code(RegisterMode.EDIT))],
             EditStates.EDIT_NICKNAME: [MessageHandler(
