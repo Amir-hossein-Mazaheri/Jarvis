@@ -3,6 +3,7 @@ from telegram.ext import ConversationHandler, ContextTypes
 
 from src.constants.other import CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, QUESTION_BOX_ID_KEY
 from src.utils.db import db
+from src.utils.question_box_result_template import question_box_result_template
 
 
 async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -28,13 +29,8 @@ async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     wrong_answers = ctx.user_data.get(WRONG_QUESTIONS_KEY)
     total_answers = ctx.user_data.get(TOTAL_QUESTIONS_KEY)
 
-    results = (
-        "📃 Here is the result of what you did today: \n\n"
-        f"🟢 <b>Correct Answers</b>: {correct_answers if correct_answers != None else 0} \n"
-        f"🔴 Wrong Answers: {wrong_answers if wrong_answers != None else 0} \n"
-        f"⭕ Empty Answers: {total_answers} \n\n"
-        "you did a great job 👏"
-    )
+    results = question_box_result_template(
+        correct_answers, wrong_answers, total_answers)
 
     await ctx.bot.send_message(update.effective_chat.id, results)
 
