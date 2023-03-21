@@ -10,6 +10,7 @@ from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
 from src.constants.states import QuestionStates
 from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY
+from src.constants.commands import SKIP_QUESTIONS, QUIT_QUESTIONS
 
 
 async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -43,11 +44,14 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    await update.message.reply_text(text="Here the list of this period questions...")
+    keyboard = ReplyKeyboardMarkup(
+        [['/' + SKIP_QUESTIONS], ['/' + QUIT_QUESTIONS]])
+
+    await update.message.reply_text(text="Here the list of this period questions...", reply_markup=keyboard)
 
     questions_count = await db.question.count(where={"question_box_id": question_box.id})
 
-    await show_question(update, question.question, list(map(lambda option: option.label, question.options)))
+    await show_question(update, ctx, question.question, question.options)
 
     ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
     ctx.user_data[QUESTION_ID_KEY] = question.id
@@ -58,28 +62,25 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    answer = update.message.text
+    answer_id = int(update.callback_query.data)
+
     user_id = update.effective_user.id
     question_id = ctx.user_data.get(QUESTION_ID_KEY)
     question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
 
-    question = await db.question.find_unique(
+    answer = await db.questionoption.find_first(
         where={
-            "id": question_id
-        },
-        include={
-            "options": True
+            "id": answer_id,
+            "question_id": question_id
         }
     )
 
-    correct_answer: QuestionOption = None
+    if not bool(answer):
+        await ctx.bot.send_message(update.effective_chat.id, "Please choose one of the question button and try again.")
 
-    for option in question.options:
-        if option.is_answer:
-            correct_answer = option
-            break
+        return QuestionStates.ANSWER_VALIDATOR
 
-    if correct_answer.label == answer:
+    if answer.is_answer:
         wrong_question_count = ctx.user_data.get(CORRECT_QUESTIONS_KEY)
         ctx.user_data[CORRECT_QUESTIONS_KEY] = wrong_question_count + \
             1 if wrong_question_count != None else 1
@@ -147,7 +148,7 @@ async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    await show_question(update, question.question, list(map(lambda option: option.label, question.options)))
+    await show_question(update, ctx, question.question, question.options)
 
     ctx.user_data[QUESTION_ID_KEY] = question.id
     ctx.user_data[SEEN_QUESTIONS_KEY] = json.dumps(seen_questions)
@@ -157,7 +158,9 @@ async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     question_id = ctx.user_data.get(QUESTION_ID_KEY)
-    next_question_id = await get_next_question_id(question_id)
+    seen_questions = json.loads(ctx.user_data.get(SEEN_QUESTIONS_KEY))
+    question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
+    next_question_id = await get_next_question_id(question_box_id, question_id, seen_questions)
 
     if not bool(next_question_id):
         return await show_questions_result(update, ctx)
@@ -168,7 +171,7 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    return show_questions_result(update, ctx)
+    return await show_questions_result(update, ctx)
 
 
 async def cancel_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):

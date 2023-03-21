@@ -6,7 +6,7 @@ from src.utils.db import db
 
 
 async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(text="Nice you reached the end, good job.", reply_markup=ReplyKeyboardRemove())
+    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Nice you reached the end, good job.", reply_markup=ReplyKeyboardRemove())
 
     question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
     user_id = update.effective_user.id
@@ -36,7 +36,7 @@ async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "you did a great job 👏"
     )
 
-    await update.message.reply_text(text=results)
+    await ctx.bot.send_message(update.effective_chat.id, results)
 
     # just make sure that old data doesn't conflict with new data in future
     ctx.user_data[CORRECT_QUESTIONS_KEY] = None

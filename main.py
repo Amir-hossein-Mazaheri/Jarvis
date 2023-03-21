@@ -1,8 +1,9 @@
-from telegram.ext import ApplicationBuilder, CommandHandler, ConversationHandler, MessageHandler, filters, Defaults
+from telegram.ext import ApplicationBuilder, CommandHandler, ConversationHandler, MessageHandler, filters, Defaults, CallbackQueryHandler
 from telegram.constants import ParseMode
 from dotenv import load_dotenv
 from os import getenv
 import logging
+import re
 
 from src.utils.db import connect_to_db
 from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, NEXT_QUESTION, SKIP_QUESTIONS, QUIT_QUESTIONS
@@ -59,9 +60,9 @@ def main():
         states={
             QuestionStates.SHOW_QUESTIONS: [CommandHandler(QUESTIONS, send_questions)],
             QuestionStates.ANSWER_VALIDATOR: [CommandHandler(SKIP_QUESTIONS, skip_question),
-                                              CommandHandler(
-                                                  QUIT_QUESTIONS, quit_questions),
-                                              MessageHandler(filters.TEXT & (~filters.COMMAND), answer_validator)],
+                                              CommandHandler(QUIT_QUESTIONS, quit_questions
+                                                             ),
+                                              CallbackQueryHandler(answer_validator)],
         },
         fallbacks=[CommandHandler(CANCEL, cancel_questions)]
     )
