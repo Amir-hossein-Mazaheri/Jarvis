@@ -44,7 +44,7 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Sorry there is no question to show you, you answered all of them either there is no question")
         return ConversationHandler.END
 
-    await update.message.reply_text("Are you sure that you want to start question?", reply_markup=keyboard)
+    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Are you sure that you want to start question?", reply_markup=keyboard)
 
     ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
 

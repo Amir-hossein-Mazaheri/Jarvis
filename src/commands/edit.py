@@ -23,7 +23,7 @@ async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                               callback_data=EDIT_ACTIONS["nickname"])]
     ])
 
-    await update.message.reply_text(text="Please send me what you want to edit?", reply_markup=keyboard)
+    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Please send me what you want to edit?", reply_markup=keyboard)
 
     return EditStates.EDIT_DECIDER
 
@@ -46,6 +46,6 @@ async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel_edit(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(text="Edit canceled.")
+    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Edit canceled.")
 
     return ConversationHandler.END
