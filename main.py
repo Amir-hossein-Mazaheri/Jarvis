@@ -5,13 +5,13 @@ import os
 import logging
 
 from src.utils.db import connect_to_db
-from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS, STAT, BACK_TO_STAT
+from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS, STAT, BACK_TO_STAT, QUESTIONS_HISTORY, NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates
 from src.commands.register import start, ask_for_student_code, register_student_code, register_nickname, cancel_registration
 from src.commands.edit import ask_to_edit_what, edit_decider, cancel_edit
 from src.commands.questions import send_questions, cancel_questions, answer_validator, skip_question, quit_questions, prep_phase
-from src.commands.other import get_user_stat, cancel_stat, show_question_box_stat, stat_decider
+from src.commands.other import get_user_stat, cancel_stat, show_question_box_stat, stat_decider, questions_history
 
 # loads .env content into env variables
 load_dotenv()
@@ -79,11 +79,15 @@ def main():
         fallbacks=[CommandHandler(CANCEL, cancel_stat)]
     )
 
+    history_handlers = [CommandHandler(
+        QUESTIONS_HISTORY, questions_history), CallbackQueryHandler(questions_history, NEXT_QUESTIONS_PAGE), CallbackQueryHandler(questions_history, PREV_QUESTIONS_PAGE)]
+
     application.add_handler(start_handler)
     application.add_handler(register_handler)
     application.add_handler(edit_handler)
     application.add_handler(question_handler)
     application.add_handler(stat_handler)
+    application.add_handlers(history_handlers)
 
     application.run_polling()
 
