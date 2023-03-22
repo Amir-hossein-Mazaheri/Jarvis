@@ -4,3 +4,4 @@
 conversation.py
 quiz.py
 __pycache__
+/*.json
