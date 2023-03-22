@@ -7,12 +7,18 @@ from src.utils.db import db
 from src.utils.get_next_question_id import get_next_question_id
 from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
+from src.utils.ignore_user import ignore_user
 from src.constants.states import QuestionStates
 from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY
 from src.constants.commands import SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS
 
 
 async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     user_id = update.effective_user.id
 
     keyboard = InlineKeyboardMarkup(
@@ -46,6 +52,11 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
 
     question = await db.question.find_first(
@@ -77,6 +88,11 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     answer_id = int(update.callback_query.data)
 
     user_id = update.effective_user.id
@@ -147,6 +163,11 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     next_question_id = ctx.user_data.get(NEXT_QUESTION_ID_KEY)
 
     # these two lines makes sure that next question is added to seen questions list
@@ -172,6 +193,11 @@ async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     question_id = ctx.user_data.get(QUESTION_ID_KEY)
     seen_questions = json.loads(ctx.user_data.get(SEEN_QUESTIONS_KEY))
     question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
@@ -186,6 +212,16 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     return await show_questions_result(update, ctx)
 
 

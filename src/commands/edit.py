@@ -2,6 +2,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 
 from src.constants.states import EditStates
+from src.utils.ignore_user import ignore_user
 
 EDIT_ACTIONS = {
     "student_code": "Student Code",
@@ -10,7 +11,10 @@ EDIT_ACTIONS = {
 
 
 async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # reply_keyboard = [[EDIT_ACTIONS["student_code"], EDIT_ACTIONS["nickname"]]]
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(EDIT_ACTIONS["student_code"],

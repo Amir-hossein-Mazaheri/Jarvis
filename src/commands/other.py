@@ -3,6 +3,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from src.utils.db import db
 from src.utils.question_box_result_template import question_box_result_template
+from src.utils.ignore_user import ignore_user
 from src.constants.states import StatStates
 from src.constants.commands import BACK_TO_STAT, NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
 from src.constants.other import LAST_USER_STAT_MESSAGE_KEY, LAST_USER_QUESTION_BOX_STAT_KEY, LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE, LAST_QUESTIONS_MESSAGE_KEY
@@ -16,6 +17,11 @@ async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     user_id = update.effective_user.id
 
     question_boxes = await db.questionsbox.find_many(
@@ -42,6 +48,11 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     question_box_id = int(update.callback_query.data)
     last_user_stat = ctx.user_data.get(LAST_USER_STAT_MESSAGE_KEY)
     user_id = update.effective_user.id
@@ -86,6 +97,11 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
 
 
 async def stat_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     back_to_stat = update.callback_query.data
     last_user_question_box_stat = ctx.user_data.get(
         LAST_USER_QUESTION_BOX_STAT_KEY)
@@ -103,6 +119,11 @@ async def stat_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_user(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
     next_page = update.callback_query
     page = ctx.user_data.get(LAST_QUESTIONS_PAGE_KEY)
 
