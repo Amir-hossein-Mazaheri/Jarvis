@@ -14,6 +14,7 @@ LAST_USER_STAT_MESSAGE_KEY = "last_user_stat_message_key"
 LAST_USER_QUESTION_BOX_STAT_KEY = "last_user_question_box_stat"
 LAST_QUESTIONS_PAGE_KEY = "last_questions_page"
 LAST_QUESTIONS_MESSAGE_KEY = "last_questions_message"
+LAST_MESSAGE_KEY = "last_message_key"
 
 
 class RegisterMode(Enum):
