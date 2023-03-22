@@ -7,6 +7,7 @@ from src.utils.db import db
 from src.utils.is_there_admin import is_there_admin
 from src.utils.is_admin import is_admin
 from src.utils.ignore_command import ignore_command
+from src.utils.show_user import show_user
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, CANCEL, ADMIN_PROMPT_ADD_QUESTION_BOX
@@ -14,7 +15,7 @@ from src.constants.other import LAST_MESSAGE_KEY
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = ignore_command(update, ctx)
+    should_ignore = await ignore_command(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -62,7 +63,7 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = ignore_command(update, ctx)
+    should_ignore = await ignore_command(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -95,7 +96,7 @@ async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = ignore_command(update, ctx)
+    should_ignore = await ignore_command(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -176,12 +177,40 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = ignore_command(update, ctx)
+    should_ignore = await ignore_command(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
 
+    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
+
+    users = await db.user.find_many(
+        order={
+            "is_admin": "desc"
+        }
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "Back To Actions", callback_data=BACK_TO_ADMIN_ACTIONS)
+            ]
+        ]
+    )
+
+    users_template = ""
+
+    for i, user in enumerate(users):
+        users_template += show_user(user.nickname, user.student_code,
+                                    user.is_admin, i + 1)
+
+    await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=users_template, reply_markup=keyboard)
+
+    return AdminStates.ADMIN_ACTIONS
 
 
 async def cancel_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ctx.user_data[LAST_MESSAGE_KEY] = None
+
     return ConversationHandler.END
