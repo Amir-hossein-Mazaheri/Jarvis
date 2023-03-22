@@ -44,8 +44,9 @@ def main():
             ask_for_student_code, REGISTER)],
         states={
             RegisterStates.ASK_FOR_STUDENT_CODE: [CommandHandler(REGISTER, ask_for_student_code)],
-            RegisterStates.REGISTER_STUDENT_CODE: [MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
-            RegisterStates.REGISTER_NICKNAME: [MessageHandler(
+            RegisterStates.REGISTER_STUDENT_CODE: [CallbackQueryHandler(cancel_registration, CANCEL), MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
+            RegisterStates.REGISTER_NICKNAME: [CallbackQueryHandler(cancel_registration, CANCEL),
+                                               MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.CREATE))]
         },
         fallbacks=[CommandHandler(CANCEL, cancel_registration)]
@@ -56,7 +57,7 @@ def main():
             EDIT, ask_to_edit_what), CallbackQueryHandler(ask_to_edit_what, EDIT)],
         states={
             EditStates.ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
-            EditStates.EDIT_DECIDER: [CallbackQueryHandler(edit_decider)],
+            EditStates.EDIT_DECIDER: [CallbackQueryHandler(cancel_edit, CANCEL), CallbackQueryHandler(edit_decider)],
             EditStates.EDIT_STUDENT_CODE: [MessageHandler(
                 filters.TEXT, register_student_code(RegisterMode.EDIT))],
             EditStates.EDIT_NICKNAME: [MessageHandler(
