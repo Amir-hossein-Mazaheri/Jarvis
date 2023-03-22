@@ -12,6 +12,7 @@ datasource db {
 model User {
     id                         Int            @id @default(autoincrement())
     tel_id                     BigInt         @unique
+    is_admin                   Boolean        @default(false)
     name                       String
     nickname                   String         @db.VarChar(255)
     student_code               String         @db.VarChar(20)
