@@ -9,7 +9,7 @@ from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
 from src.utils.ignore_user import ignore_user
 from src.constants.states import QuestionStates
-from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY
+from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
 from src.constants.commands import SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS
 
 
@@ -41,10 +41,13 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         })
 
     if not bool(question_box):
-        await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Sorry there is no question to show you, you answered all of them either there is no question")
+        sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Sorry there is no question to show you, you answered all of them either there is no question")
+        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+
         return ConversationHandler.END
 
-    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Are you sure that you want to start question?", reply_markup=keyboard)
+    sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Are you sure that you want to start question?", reply_markup=keyboard)
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
 
@@ -107,7 +110,8 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if not bool(answer):
-        await ctx.bot.send_message(update.effective_chat.id, "Please choose one of the question button and try again.")
+        sent_message = await ctx.bot.send_message(update.effective_chat.id, "Please choose one of the question button and try again.")
+        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return QuestionStates.ANSWER_VALIDATOR
 
@@ -226,6 +230,7 @@ async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await ctx.bot.send_message(update.effective_chat.id, "questions has been canceled")
+    sent_message = await ctx.bot.send_message(update.effective_chat.id, "questions has been canceled")
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return ConversationHandler.END

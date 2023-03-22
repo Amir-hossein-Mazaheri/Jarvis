@@ -40,7 +40,8 @@ def main():
     start_handler = CommandHandler(START, start)
 
     register_handler = ConversationHandler(
-        entry_points=[CommandHandler(REGISTER, ask_for_student_code)],
+        entry_points=[CommandHandler(REGISTER, ask_for_student_code), CallbackQueryHandler(
+            ask_for_student_code, REGISTER)],
         states={
             RegisterStates.ASK_FOR_STUDENT_CODE: [CommandHandler(REGISTER, ask_for_student_code)],
             RegisterStates.REGISTER_STUDENT_CODE: [MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
@@ -51,7 +52,8 @@ def main():
     )
 
     edit_handler = ConversationHandler(
-        entry_points=[CommandHandler(EDIT, ask_to_edit_what)],
+        entry_points=[CommandHandler(
+            EDIT, ask_to_edit_what), CallbackQueryHandler(ask_to_edit_what, EDIT)],
         states={
             EditStates.ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
             EditStates.EDIT_DECIDER: [CallbackQueryHandler(edit_decider)],
@@ -64,7 +66,8 @@ def main():
     )
 
     question_handler = ConversationHandler(
-        entry_points=[CommandHandler(QUESTIONS, prep_phase)],
+        entry_points=[CommandHandler(
+            QUESTIONS, prep_phase), CallbackQueryHandler(prep_phase, QUESTIONS)],
         states={
             QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(cancel_questions, CANCEL_QUESTIONS)],
             QuestionStates.ANSWER_VALIDATOR: [CommandHandler(SKIP_QUESTIONS, skip_question),
@@ -76,7 +79,8 @@ def main():
     )
 
     stat_handler = ConversationHandler(
-        entry_points=[CommandHandler(STAT, get_user_stat)],
+        entry_points=[CommandHandler(
+            STAT, get_user_stat), CallbackQueryHandler(get_user_stat, STAT)],
         states={
             StatStates.SHOW_STAT: [CallbackQueryHandler(get_user_stat)],
             StatStates.SELECT_QUESTION_BOX: [
@@ -107,8 +111,12 @@ def main():
         fallbacks=[]
     )
 
-    history_handlers = [CommandHandler(
-        QUESTIONS_HISTORY, questions_history), CallbackQueryHandler(questions_history, NEXT_QUESTIONS_PAGE), CallbackQueryHandler(questions_history, PREV_QUESTIONS_PAGE)]
+    history_handlers = [
+        CommandHandler(QUESTIONS_HISTORY, questions_history),
+        CallbackQueryHandler(questions_history, QUESTIONS_HISTORY),
+        CallbackQueryHandler(questions_history, NEXT_QUESTIONS_PAGE),
+        CallbackQueryHandler(questions_history, PREV_QUESTIONS_PAGE)
+    ]
 
     application.add_handler(start_handler)
     application.add_handler(register_handler)

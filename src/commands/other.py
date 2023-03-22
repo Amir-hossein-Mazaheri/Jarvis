@@ -6,7 +6,7 @@ from src.utils.question_box_result_template import question_box_result_template
 from src.utils.ignore_user import ignore_user
 from src.constants.states import StatStates
 from src.constants.commands import BACK_TO_STAT, NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
-from src.constants.other import LAST_USER_STAT_MESSAGE_KEY, LAST_USER_QUESTION_BOX_STAT_KEY, LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE, LAST_QUESTIONS_MESSAGE_KEY
+from src.constants.other import LAST_USER_STAT_MESSAGE_KEY, LAST_USER_QUESTION_BOX_STAT_KEY, LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE, LAST_QUESTIONS_MESSAGE_KEY, LAST_MESSAGE_KEY
 from src.utils.question_history_template import question_history_template
 
 
@@ -181,10 +181,13 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     else:
         sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text=questions_template, reply_markup=keyboard)
 
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+
     ctx.user_data[LAST_QUESTIONS_MESSAGE_KEY] = sent_message.id
 
 
 async def cancel_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="stat fetching canceled")
+    sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="stat fetching canceled")
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return ConversationHandler.END

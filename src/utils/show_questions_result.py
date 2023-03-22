@@ -1,7 +1,7 @@
 from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import ConversationHandler, ContextTypes
 
-from src.constants.other import CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, QUESTION_BOX_ID_KEY
+from src.constants.other import CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
 from src.utils.db import db
 from src.utils.question_box_result_template import question_box_result_template
 
@@ -32,7 +32,8 @@ async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     results = question_box_result_template(
         correct_answers, wrong_answers, total_answers)
 
-    await ctx.bot.send_message(update.effective_chat.id, results)
+    sent_message = await ctx.bot.send_message(update.effective_chat.id, results)
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     # just make sure that old data doesn't conflict with new data in future
     ctx.user_data[CORRECT_QUESTIONS_KEY] = None

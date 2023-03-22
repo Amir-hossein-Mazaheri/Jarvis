@@ -3,23 +3,29 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from src.utils.db import db
 from src.utils.is_user_registered import is_user_registered
-from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode
+from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, LAST_MESSAGE_KEY
 from src.constants.states import RegisterStates, EditStates
+from src.utils.get_actions_keyboard import get_actions_keyboard
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(text="Welcome to Staff Bot Manger")
+    keyboard = await get_actions_keyboard(update, ctx)
+
+    sent_message = await update.message.reply_text(text="Welcome to Staff Bot Manger", reply_markup=keyboard)
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
 
 async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
     if await is_user_registered(user_id):
-        await update.message.reply_text(text="You already registered, if you want to edit your info use /edit command.")
+        sent_message = await update.message.reply_text(text="You already registered, if you want to edit your info use /edit command.")
+        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return ConversationHandler.END
 
-    await update.message.reply_text(text="This step in needed for registering your info, please send me your student number")
+    sent_message = await update.message.reply_text(text="This step in needed for registering your info, please send me your student number")
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return RegisterStates.REGISTER_STUDENT_CODE
 
@@ -37,7 +43,8 @@ def register_student_code(mode: RegisterMode):
         student_code = update.message.text
 
         if len(student_code) != STUDENT_CODE_LENGTH:
-            await update.message.reply_text(text="Invalid student id please send again")
+            sent_message = await update.message.reply_text(text="Invalid student id please send again")
+            ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
             if mode == RegisterMode.CREATE:
                 return RegisterStates.REGISTER_STUDENT_CODE
@@ -68,7 +75,8 @@ def register_student_code(mode: RegisterMode):
         else:
             reply_text = "Cool, your student code has been changed."
 
-        await update.message.reply_text(text=reply_text)
+        sent_message = await update.message.reply_text(text=reply_text)
+        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         if mode == RegisterMode.CREATE:
             return RegisterStates.REGISTER_NICKNAME
@@ -99,7 +107,8 @@ def register_nickname(mode: RegisterMode):
         else:
             reply_text = "Cool, your nickname been changed."
 
-        await update.message.reply_text(text=reply_text)
+        sent_message = await update.message.reply_text(text=reply_text)
+        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return ConversationHandler.END
 
@@ -107,6 +116,7 @@ def register_nickname(mode: RegisterMode):
 
 
 async def cancel_registration(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(text="registration canceled")
+    sent_message = await update.message.reply_text(text="registration canceled")
+    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return ConversationHandler.END
