@@ -9,6 +9,7 @@ from src.utils.is_admin import is_admin
 from src.utils.ignore_command import ignore_command
 from src.utils.show_user import show_user
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
+from src.utils.send_message import send_message
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
@@ -17,6 +18,7 @@ from src.constants.other import LAST_MESSAGE_KEY
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_command(update, ctx)
+    message_sender = send_message(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -29,18 +31,19 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         keyboard_buttons.append(InlineKeyboardButton(
             "Register Admin", callback_data=REGISTER_ADMIN))
 
-        sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="There is no admin please register ASAP.", reply_markup=InlineKeyboardMarkup([keyboard_buttons]))
+        sent_message = await message_sender(text="ادمینی وجود ندارد بدو ثبت کن خودتو هرچه زودتر", reply_markup=InlineKeyboardMarkup([keyboard_buttons]), edit=False)
+
         ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return AdminStates.REGISTER_ADMIN
 
     keyboard_buttons.append(
-        InlineKeyboardButton("Add question box",
+        InlineKeyboardButton("➕ " + "افزودن آزمون",
                              callback_data=ADMIN_PROMPT_ADD_QUESTION_BOX)
     )
 
     keyboard_buttons.append(
-        InlineKeyboardButton("Show list of users",
+        InlineKeyboardButton("📃 " + "نمایش لیست کاربران",
                              callback_data=ADMIN_SHOW_USERS_LIST)
     )
 
@@ -53,10 +56,7 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     sent_message = None
 
-    if last_message:
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Here is the list of actions can do?", reply_markup=keyboard)
-    else:
-        sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Here is the list of actions can do?", reply_markup=keyboard)
+    sent_message = await message_sender(text="🧑‍💼 " + "لیست کارای ادمینی", reply_markup=keyboard)
 
     ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
@@ -65,12 +65,12 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_command(update, ctx)
+    message_sender = send_message(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
 
     user_id = update.effective_user.id
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
     await db.user.update(
         where={
@@ -85,38 +85,38 @@ async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         [
             [
                 InlineKeyboardButton(
-                    "Back To Actions", callback_data=BACK_TO_ADMIN_ACTIONS)
+                    "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+                get_back_to_menu_button()
             ]
         ]
     )
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Your account has been register as admin.", reply_markup=keyboard)
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text="حسابت به عنوان ادمین ثبت شد", reply_markup=keyboard)
 
     return AdminStates.SHOW_ADMIN_ACTIONS
 
 
 async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_command(update, ctx)
+    message_sender = send_message(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
 
     callback_query = update.callback_query
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
     keyboard = InlineKeyboardMarkup(
         [
             [
                 InlineKeyboardButton(
-                    "Back To Actions", callback_data=BACK_TO_ADMIN_ACTIONS)
+                    "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+                get_back_to_menu_button()
             ]
         ]
     )
 
     if callback_query:
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="please send me json file of questions", reply_markup=keyboard)
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+        await message_sender(text="برا من یه فایل json بفرست که مطابق schema درست باشه", reply_markup=keyboard)
 
         return AdminStates.ADMIN_ACTIONS
 
@@ -153,8 +153,8 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     question_box = await db.questionsbox.create(
         data={
             "label": parsed_file["label"],
-            "duration": real_deadline,
-            "deadline": datetime.fromisoformat(parsed_file["deadline"]),
+            "duration": int(parsed_file["duration"]),
+            "deadline": real_deadline,
         }
     )
 
@@ -177,19 +177,17 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             }
         )
 
-    sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Wow, you successfully added a question box", reply_markup=keyboard)
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text="نه بابا، آزمونتو ساختی داپش", reply_markup=keyboard, edit=False)
 
     return AdminStates.SHOW_ADMIN_ACTIONS
 
 
 async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_command(update, ctx)
+    message_sender = send_message(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
-
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
     users = await db.user.find_many(
         order={
@@ -201,7 +199,8 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         [
             [
                 InlineKeyboardButton(
-                    "Back To Actions", callback_data=BACK_TO_ADMIN_ACTIONS)
+                    "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+                get_back_to_menu_button()
             ]
         ]
     )
@@ -212,12 +211,6 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         users_template += show_user(user.nickname, user.student_code,
                                     user.is_admin, i + 1)
 
-    await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=users_template, reply_markup=keyboard)
+    await message_sender(text=users_template, reply_markup=keyboard)
 
     return AdminStates.ADMIN_ACTIONS
-
-
-async def cancel_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    ctx.user_data[LAST_MESSAGE_KEY] = None
-
-    return ConversationHandler.END

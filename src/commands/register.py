@@ -4,15 +4,17 @@ from telegram.ext import ContextTypes, ConversationHandler
 from src.utils.db import db
 from src.utils.is_user_registered import is_user_registered
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
-from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, LAST_MESSAGE_KEY
-from src.constants.states import RegisterStates, EditStates
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.is_user_registered import is_user_registered
+from src.utils.send_message import send_message
+from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, LAST_MESSAGE_KEY
+from src.constants.states import RegisterStates, EditStates
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     keyboard = await get_actions_keyboard(update, ctx)
+    message_sender = send_message(update, ctx)
 
     text = ""
 
@@ -24,18 +26,15 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "برای استفاده از خدمات ربات باید <b>ثبت نام</b> کنی"
         )
 
-    sent_message = await update.message.reply_text(text=text, reply_markup=keyboard)
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text=text, reply_markup=keyboard, edit=False)
 
 
 async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
+    message_sender = send_message(update, ctx)
 
     if await is_user_registered(user_id):
-        sent_message = await update.message.reply_text(text="شما قبلا ثبت نام کرده اید")
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
-
+        await message_sender(text="شما قبلا ثبت نام کرده اید")
         return ConversationHandler.END
 
     keyboard = InlineKeyboardMarkup(
@@ -44,8 +43,7 @@ async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ]
     )
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="این مرحله برای استفاده از ربات لازمه، پس کد دانشجوییت رو برام بفرست", reply_markup=keyboard)
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text="این مرحله برای استفاده از ربات لازمه، پس کد دانشجوییت رو برام بفرست", reply_markup=keyboard)
 
     return RegisterStates.REGISTER_STUDENT_CODE
 
@@ -61,10 +59,10 @@ def register_student_code(mode: RegisterMode):
         user_id = update.effective_user.id
         name = update.effective_user.name
         student_code = update.message.text
+        message_sender = send_message(update, ctx)
 
         if len(student_code) != STUDENT_CODE_LENGTH:
-            sent_message = await update.message.reply_text(text="کد دانشجویی که فرستادی اشتباهه دوباره کد دانشجوییت رو بفرست")
-            ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+            await message_sender(text="کد دانشجویی که فرستادی اشتباهه دوباره کد دانشجوییت رو بفرست")
 
             if mode == RegisterMode.CREATE:
                 return RegisterStates.REGISTER_STUDENT_CODE
@@ -102,8 +100,7 @@ def register_student_code(mode: RegisterMode):
             reply_text = "عالیه، شماره دانشجوییت تغییر کرد"
             keyboard = await get_actions_keyboard(update, ctx)
 
-        sent_message = await update.message.reply_text(text=reply_text, reply_markup=keyboard)
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+        await message_sender(text=reply_text, reply_markup=keyboard, edit=False)
 
         if mode == RegisterMode.CREATE:
             return RegisterStates.REGISTER_NICKNAME
@@ -115,6 +112,7 @@ def register_student_code(mode: RegisterMode):
 
 def register_nickname(mode: RegisterMode):
     async def register_nickname_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        message_sender = send_message(update, ctx)
         user_id = update.effective_user.id
         nickname = update.message.text
 
@@ -134,8 +132,7 @@ def register_nickname(mode: RegisterMode):
         else:
             reply_text = "عالیه، اسم مستعارت تغییر کرد"
 
-        sent_message = await update.message.reply_text(text=reply_text, reply_markup=await get_actions_keyboard(update, ctx))
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+        await message_sender(text=reply_text, reply_markup=await get_actions_keyboard(update, ctx), edit=False)
 
         return ConversationHandler.END
 

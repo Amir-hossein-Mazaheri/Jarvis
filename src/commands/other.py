@@ -4,15 +4,16 @@ from datetime import datetime
 
 from src.utils.db import db
 from src.utils.ignore_user import ignore_user
-from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
-from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE, LAST_MESSAGE_KEY
 from src.utils.question_history_template import question_history_template
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
+from src.utils.send_message import send_message
+from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
+from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE
 
 
 async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
+    message_sender = send_message(update, ctx)
 
     text = (
         "به ربات مدریت اعضای AICup خوش اومدی 👋\n\n"
@@ -23,12 +24,12 @@ async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "   🟣 ویرایش شماره دانشجویی یا اسم مستعارت توی ربات\n\n"
     )
 
-    await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=text, reply_markup=await get_actions_keyboard(update, ctx))
+    await message_sender(text=text, reply_markup=await get_actions_keyboard(update, ctx))
 
 
 async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
+    message_sender = send_message(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -62,7 +63,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if len(questions) == 0:
-        return await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="فعلا سوالی نداریم", reply_markup=await get_actions_keyboard(update, ctx))
+        return await message_sender(text="فعلا سوالی نداریم", reply_markup=await get_actions_keyboard(update, ctx))
 
     questions_count = await db.question.count()
 
@@ -94,21 +95,16 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     ctx.user_data[LAST_QUESTIONS_PAGE_KEY] = curr_page
 
-    sent_message = None
-
     if callback_query:
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=questions_template, reply_markup=keyboard)
+        await message_sender(text=questions_template, reply_markup=keyboard)
     else:
-        sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text=questions_template, reply_markup=keyboard)
-
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+        await message_sender(text=questions_template, reply_markup=keyboard, edit=False)
 
 
 async def back_to_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
+    message_sender = send_message(update, ctx)
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="🟥 " + "منوی ربات", reply_markup=await get_actions_keyboard(update, ctx))
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text="🟥 " + "منوی ربات", reply_markup=await get_actions_keyboard(update, ctx))
 
     # to make sure that it exits conversation wether it get used in conversation handler
     return ConversationHandler.END

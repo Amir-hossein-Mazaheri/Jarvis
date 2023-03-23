@@ -10,6 +10,7 @@ from src.utils.show_question import show_question
 from src.utils.ignore_user import ignore_user
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
+from src.utils.send_message import send_message
 from src.constants.states import QuestionStates
 from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
 from src.constants.commands import START_QUESTIONS
@@ -17,12 +18,12 @@ from src.constants.commands import START_QUESTIONS
 
 async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
+    message_sender = send_message(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
 
     user_id = update.effective_user.id
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
     keyboard = InlineKeyboardMarkup(
         [
@@ -44,9 +45,7 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         })
 
     if not bool(question_box):
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="فعلا آزمونی برای نمایش نداریم", reply_markup=await get_actions_keyboard(update, ctx))
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
-
+        await message_sender(text="فعلا آزمونی برای نمایش نداریم", reply_markup=await get_actions_keyboard(update, ctx))
         return ConversationHandler.END
 
     text = (
@@ -55,8 +54,7 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "برای شروع آزمون <b>شروع</b> رو بزن"
     )
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=text, reply_markup=keyboard)
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text=text, reply_markup=keyboard)
 
     ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
 
@@ -96,6 +94,7 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
+    message_sender = send_message(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -114,9 +113,7 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if not bool(answer):
-        sent_message = await ctx.bot.send_message(update.effective_chat.id, "یکی از جوابایی که دیدی رو انتخاب کن")
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
-
+        await message_sender(text="یکی از جوابایی که دیدی رو انتخاب کن", edit=False)
         return QuestionStates.ANSWER_VALIDATOR
 
     if answer.is_answer:

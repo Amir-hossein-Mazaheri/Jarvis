@@ -6,6 +6,7 @@ from src.utils.db import db
 from src.utils.ignore_user import ignore_user
 from src.utils.question_box_result_template import question_box_result_template
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
+from src.utils.send_message import send_message
 from src.constants.commands import BACK_TO_STAT
 from src.constants.states import StatStates
 from src.constants.other import LAST_MESSAGE_KEY
@@ -13,12 +14,12 @@ from src.constants.other import LAST_MESSAGE_KEY
 
 async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
     if should_ignore:
         return ConversationHandler.END
 
     user_id = update.effective_user.id
+    message_sender = send_message(update, ctx)
 
     question_boxes = await db.questionsbox.find_many(
         where={
@@ -31,8 +32,7 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if len(question_boxes) == 0:
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="توی هیچ آزمونی مشارکت نداشتی تا حالا", reply_markup=await get_actions_keyboard(update, ctx))
-
+        await message_sender(text="توی هیچ آزمونی مشارکت نداشتی تا حالا", reply_markup=await get_actions_keyboard(update, ctx))
         return ConversationHandler.END
 
     text = "📃 " + "لیست آزمون هایی که توش مشارکت داشتی: \n\n"
@@ -48,8 +48,7 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         keyboard_buttons
     )
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=text, reply_markup=keyboard)
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text=text, reply_markup=keyboard)
 
     return StatStates.SELECT_QUESTION_BOX
 
@@ -61,8 +60,8 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
         return ConversationHandler.END
 
     question_box_id = int(update.callback_query.data)
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
     user_id = update.effective_user.id
+    message_sender = send_message(update, ctx)
 
     question_box = await db.user.find_unique(
         where={
@@ -99,8 +98,7 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
         ]
     )
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=result, reply_markup=keyboard)
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text=result, reply_markup=keyboard)
 
     return StatStates.DECIDER
 
