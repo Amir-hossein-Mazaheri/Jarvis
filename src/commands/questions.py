@@ -8,9 +8,10 @@ from src.utils.get_next_question_id import get_next_question_id
 from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
 from src.utils.ignore_user import ignore_user
+from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.constants.states import QuestionStates
 from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
-from src.constants.commands import SKIP_QUESTIONS, QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS
+from src.constants.commands import START_QUESTIONS, CANCEL_QUESTIONS
 
 
 async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -20,6 +21,7 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     user_id = update.effective_user.id
+    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
     keyboard = InlineKeyboardMarkup(
         [
@@ -41,12 +43,12 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         })
 
     if not bool(question_box):
-        sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Sorry there is no question to show you, you answered all of them either there is no question")
+        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Sorry there is no question to show you, you answered all of them either there is no question", reply_markup=await get_actions_keyboard(update, ctx))
         ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return ConversationHandler.END
 
-    sent_message = await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Are you sure that you want to start question?", reply_markup=keyboard)
+    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Are you sure that you want to start question?", reply_markup=keyboard)
     ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
@@ -73,11 +75,6 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "options": True
         }
     )
-
-    keyboard = ReplyKeyboardMarkup(
-        [['/' + SKIP_QUESTIONS], ['/' + QUIT_QUESTIONS]])
-
-    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Here the list of this period questions...", reply_markup=keyboard)
 
     questions_count = await db.question.count(where={"question_box_id": question_box_id})
 
@@ -230,7 +227,9 @@ async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    sent_message = await ctx.bot.send_message(update.effective_chat.id, "questions has been canceled")
+    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
+
+    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="questions has been canceled", reply_markup=await get_actions_keyboard(update, ctx))
     ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return ConversationHandler.END

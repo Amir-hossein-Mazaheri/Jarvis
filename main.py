@@ -71,9 +71,9 @@ def main():
             QUESTIONS, prep_phase), CallbackQueryHandler(prep_phase, QUESTIONS)],
         states={
             QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(cancel_questions, CANCEL_QUESTIONS)],
-            QuestionStates.ANSWER_VALIDATOR: [CommandHandler(SKIP_QUESTIONS, skip_question),
-                                              CommandHandler(QUIT_QUESTIONS, quit_questions
-                                                             ),
+            QuestionStates.ANSWER_VALIDATOR: [CallbackQueryHandler(skip_question, SKIP_QUESTIONS),
+                                              CallbackQueryHandler(
+                                                  quit_questions, QUIT_QUESTIONS),
                                               CallbackQueryHandler(answer_validator)],
         },
         fallbacks=[CommandHandler(CANCEL, cancel_questions)]
