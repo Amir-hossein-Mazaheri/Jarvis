@@ -18,8 +18,8 @@ from src.commands.edit import ask_to_edit_what, edit_decider, cancel_edit
 from src.commands.questions import send_questions, cancel_questions, answer_validator,\
     skip_question, quit_questions, prep_phase
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list, cancel_admin
-from src.commands.other import get_user_stat, cancel_stat, show_question_box_stat, stat_decider,\
-    questions_history
+from src.commands.stat import stat_decider, cancel_stat, get_user_stat, show_question_box_stat
+from src.commands.other import questions_history
 
 # loads .env content into env variables
 load_dotenv()
@@ -85,9 +85,10 @@ def main():
         states={
             StatStates.SHOW_STAT: [CallbackQueryHandler(get_user_stat)],
             StatStates.SELECT_QUESTION_BOX: [
+                CallbackQueryHandler(cancel_stat, CANCEL),
                 CallbackQueryHandler(show_question_box_stat)],
-            StatStates.DECIDER: [CallbackQueryHandler(
-                stat_decider, BACK_TO_STAT)]
+            StatStates.DECIDER: [CallbackQueryHandler(stat_decider, BACK_TO_STAT),
+                                 CallbackQueryHandler(cancel_stat, CANCEL)]
         },
         fallbacks=[CommandHandler(CANCEL, cancel_stat)]
     )
