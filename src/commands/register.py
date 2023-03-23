@@ -83,7 +83,7 @@ def register_student_code(mode: RegisterMode):
                 }
             }
         )
-        ctx.user_data[IS_USER_REGISTERED] = "1"
+        # ctx.user_data[IS_USER_REGISTERED] = "1"
 
         reply_text = ""
         keyboard = None

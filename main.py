@@ -43,7 +43,6 @@ def main():
         entry_points=[CallbackQueryHandler(
             ask_for_student_code, REGISTER)],
         states={
-            RegisterStates.ASK_FOR_STUDENT_CODE: [CommandHandler(REGISTER, ask_for_student_code)],
             RegisterStates.REGISTER_STUDENT_CODE: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
             RegisterStates.REGISTER_NICKNAME: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU),
                                                MessageHandler(
@@ -91,10 +90,11 @@ def main():
     )
 
     admin_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(show_admin_actions, ADMIN)],
+        entry_points=[CallbackQueryHandler(
+            show_admin_actions, ADMIN), CommandHandler(ADMIN, show_admin_actions)],
         states={
             AdminStates.SHOW_ADMIN_ACTIONS: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(show_admin_actions, BACK_TO_ADMIN_ACTIONS)],
-            AdminStates.REGISTER_ADMIN: [
+            AdminStates.REGISTER_USER_AS_AN_ADMIN: [
                 CallbackQueryHandler(register_admin, REGISTER_ADMIN)],
             AdminStates.ADMIN_ACTIONS: [CallbackQueryHandler(show_users_list, ADMIN_SHOW_USERS_LIST),
                                         CallbackQueryHandler(
@@ -123,11 +123,11 @@ def main():
     show_help_handler = CallbackQueryHandler(show_help, SHOW_HELP)
 
     application.add_handler(start_handler)
+    application.add_handler(admin_handler)
     application.add_handler(register_handler)
     application.add_handler(edit_handler)
     application.add_handler(question_handler)
     application.add_handler(stat_handler)
-    application.add_handler(admin_handler)
     application.add_handler(back_to_menu_handler)
     application.add_handler(show_help_handler)
 

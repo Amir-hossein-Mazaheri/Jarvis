@@ -13,11 +13,11 @@ from src.utils.send_message import send_message
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
-from src.constants.other import IS_ADMIN_KEY
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_command(update, ctx)
+    should_ignore = await ignore_user(update, ctx)
+    is_there_any_admin = await is_there_admin()
     message_sender = send_message(update, ctx)
 
     if should_ignore:
@@ -25,13 +25,13 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     keyboard_buttons = []
 
-    if not await is_there_admin():
+    if not is_there_any_admin:
         keyboard_buttons.append(InlineKeyboardButton(
             "ثبت به عنوان ادمین", callback_data=REGISTER_ADMIN))
 
         await message_sender(text="ادمینی وجود ندارد بدو ثبت کن خودتو هرچه زودتر", reply_markup=InlineKeyboardMarkup([keyboard_buttons]), edit=False)
 
-        return AdminStates.REGISTER_ADMIN
+        return AdminStates.REGISTER_USER_AS_AN_ADMIN
 
     keyboard_buttons.append(
         InlineKeyboardButton("➕ " + "افزودن آزمون",
@@ -57,10 +57,10 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
-    is_there_admin = await is_there_admin()
+    is_there_any_admin = await is_there_admin()
     message_sender = send_message(update, ctx)
 
-    if should_ignore or is_there_admin:
+    if should_ignore or is_there_any_admin:
         return ConversationHandler.END
 
     user_id = update.effective_user.id
@@ -73,7 +73,6 @@ async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "is_admin": True
         }
     )
-    ctx.user_data[IS_ADMIN_KEY] = "1"
 
     keyboard = InlineKeyboardMarkup(
         [
