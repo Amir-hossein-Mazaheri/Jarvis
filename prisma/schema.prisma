@@ -45,8 +45,9 @@ model QuestionOption {
 model QuestionsBox {
     id        Int        @id @default(autoincrement())
     label     String     @db.VarChar(255)
-    createdAt DateTime   @default(now())
+    duration  Int
     deadline  DateTime
+    createdAt DateTime   @default(now())
     questions Question[]
     users     User[]
 }

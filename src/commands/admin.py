@@ -125,6 +125,7 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     json that is sent to bot should follow these structures:
         {
             "label": str,
+            "duration": int,
             "deadline": iso time,
             "questions": [
               {
@@ -147,6 +148,7 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     question_box = await db.questionsbox.create(
         data={
             "label": parsed_file["label"],
+            "duration": int(parsed_file["duration"]),
             "deadline": datetime.fromisoformat(parsed_file["deadline"]),
         }
     )
