@@ -8,9 +8,10 @@ from src.utils.is_there_admin import is_there_admin
 from src.utils.is_admin import is_admin
 from src.utils.ignore_command import ignore_command
 from src.utils.show_user import show_user
+from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates
-from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, BACK_TO_MENU, ADMIN_PROMPT_ADD_QUESTION_BOX
+from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
 from src.constants.other import LAST_MESSAGE_KEY
 
 
@@ -46,7 +47,7 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup(
         [
             keyboard_buttons,
-            [InlineKeyboardButton("Back", callback_data=BACK_TO_MENU)]
+            [get_back_to_menu_button()]
         ]
     )
 
