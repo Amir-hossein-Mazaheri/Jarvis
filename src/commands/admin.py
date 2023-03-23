@@ -5,15 +5,15 @@ import json
 
 from src.utils.db import db
 from src.utils.is_there_admin import is_there_admin
-from src.utils.is_admin import is_admin
 from src.utils.ignore_command import ignore_command
+from src.utils.ignore_user import ignore_user
 from src.utils.show_user import show_user
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
-from src.constants.other import LAST_MESSAGE_KEY
+from src.constants.other import IS_ADMIN_KEY
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -23,17 +23,13 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if should_ignore:
         return ConversationHandler.END
 
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
-
     keyboard_buttons = []
 
     if not await is_there_admin():
         keyboard_buttons.append(InlineKeyboardButton(
-            "Register Admin", callback_data=REGISTER_ADMIN))
+            "ثبت به عنوان ادمین", callback_data=REGISTER_ADMIN))
 
-        sent_message = await message_sender(text="ادمینی وجود ندارد بدو ثبت کن خودتو هرچه زودتر", reply_markup=InlineKeyboardMarkup([keyboard_buttons]), edit=False)
-
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+        await message_sender(text="ادمینی وجود ندارد بدو ثبت کن خودتو هرچه زودتر", reply_markup=InlineKeyboardMarkup([keyboard_buttons]), edit=False)
 
         return AdminStates.REGISTER_ADMIN
 
@@ -54,20 +50,17 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ]
     )
 
-    sent_message = None
-
-    sent_message = await message_sender(text="🧑‍💼 " + "لیست کارای ادمینی", reply_markup=keyboard)
-
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+    await message_sender(text="🧑‍💼 " + "لیست کارای ادمینی", reply_markup=keyboard)
 
     return AdminStates.ADMIN_ACTIONS
 
 
 async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_command(update, ctx)
+    should_ignore = await ignore_user(update, ctx)
+    is_there_admin = await is_there_admin()
     message_sender = send_message(update, ctx)
 
-    if should_ignore:
+    if should_ignore or is_there_admin:
         return ConversationHandler.END
 
     user_id = update.effective_user.id
@@ -80,6 +73,7 @@ async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "is_admin": True
         }
     )
+    ctx.user_data[IS_ADMIN_KEY] = "1"
 
     keyboard = InlineKeyboardMarkup(
         [

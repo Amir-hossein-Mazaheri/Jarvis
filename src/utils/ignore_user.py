@@ -7,8 +7,7 @@ from src.utils.get_actions_keyboard import get_actions_keyboard
 
 
 async def ignore_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    is_registered = await is_user_registered(user_id)
+    is_registered = await is_user_registered(update, ctx)
     message_sender = send_message(update, ctx)
 
     if not is_registered:

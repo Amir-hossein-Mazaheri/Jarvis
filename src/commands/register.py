@@ -7,18 +7,17 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.is_user_registered import is_user_registered
 from src.utils.send_message import send_message
-from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, LAST_MESSAGE_KEY
+from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, IS_USER_REGISTERED
 from src.constants.states import RegisterStates, EditStates
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
     keyboard = await get_actions_keyboard(update, ctx)
     message_sender = send_message(update, ctx)
 
     text = ""
 
-    if await is_user_registered(user_id):
+    if await is_user_registered(update, ctx):
         text = "به ربات مدریت اعضای AICup خوش اومدی\n\n"
     else:
         text = (
@@ -30,10 +29,9 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
     message_sender = send_message(update, ctx)
 
-    if await is_user_registered(user_id):
+    if await is_user_registered(update, ctx):
         await message_sender(text="شما قبلا ثبت نام کرده اید")
         return ConversationHandler.END
 
@@ -85,6 +83,7 @@ def register_student_code(mode: RegisterMode):
                 }
             }
         )
+        ctx.user_data[IS_USER_REGISTERED] = "1"
 
         reply_text = ""
         keyboard = None

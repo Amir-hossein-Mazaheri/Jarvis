@@ -8,10 +8,9 @@ from src.constants.commands import ADMIN
 
 
 async def get_actions_keyboard(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
     keyboard_buttons = []
 
-    if not await is_user_registered(user_id):
+    if not await is_user_registered(update, ctx):
         keyboard_buttons.append(
             [InlineKeyboardButton("➕ " + "ثبت نام", callback_data=REGISTER)])
     else:
@@ -26,7 +25,7 @@ async def get_actions_keyboard(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 "📃 " + " سول آزمون هایی که تا حالا برگزار شده", callback_data=QUESTIONS_HISTORY)]
         ]
 
-        if await is_admin(user_id):
+        if await is_admin(update, ctx):
             keyboard_buttons.append([InlineKeyboardButton(
                 "🧑‍💼 " + "کارای ادمینی", callback_data=ADMIN)])
 

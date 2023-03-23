@@ -7,8 +7,7 @@ from src.utils.send_message import send_message
 
 
 async def ignore_command(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    admin = await is_admin(user_id)
+    admin = await is_admin(update, ctx)
     message_sender = send_message(update, ctx)
 
     if not admin:
