@@ -9,7 +9,7 @@ from src.utils.db import connect_to_db
 from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTIONS, SKIP_QUESTIONS,\
     QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS, STAT, BACK_TO_STAT, QUESTIONS_HISTORY,\
     NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, ADMIN, REGISTER_ADMIN,\
-    ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
+    ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, SHOW_HELP
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates, AdminStates
 from src.commands.register import start, ask_for_student_code, register_student_code,\
@@ -19,7 +19,7 @@ from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
-from src.commands.other import questions_history, back_to_menu
+from src.commands.other import questions_history, back_to_menu, show_help
 
 # loads .env content into env variables
 load_dotenv()
@@ -40,7 +40,7 @@ def main():
     start_handler = CommandHandler(START, start)
 
     register_handler = ConversationHandler(
-        entry_points=[CommandHandler(REGISTER, ask_for_student_code), CallbackQueryHandler(
+        entry_points=[CallbackQueryHandler(
             ask_for_student_code, REGISTER)],
         states={
             RegisterStates.ASK_FOR_STUDENT_CODE: [CommandHandler(REGISTER, ask_for_student_code)],
@@ -53,8 +53,7 @@ def main():
     )
 
     edit_handler = ConversationHandler(
-        entry_points=[CommandHandler(
-            EDIT, ask_to_edit_what), CallbackQueryHandler(ask_to_edit_what, EDIT)],
+        entry_points=[CallbackQueryHandler(ask_to_edit_what, EDIT)],
         states={
             EditStates.ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
             EditStates.EDIT_DECIDER: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(edit_decider)],
@@ -67,8 +66,7 @@ def main():
     )
 
     question_handler = ConversationHandler(
-        entry_points=[CommandHandler(
-            QUESTIONS, prep_phase), CallbackQueryHandler(prep_phase, QUESTIONS)],
+        entry_points=[CallbackQueryHandler(prep_phase, QUESTIONS)],
         states={
             QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(back_to_menu, BACK_TO_MENU)],
             QuestionStates.ANSWER_VALIDATOR: [CallbackQueryHandler(skip_question, SKIP_QUESTIONS),
@@ -80,8 +78,7 @@ def main():
     )
 
     stat_handler = ConversationHandler(
-        entry_points=[CommandHandler(
-            STAT, get_user_stat), CallbackQueryHandler(get_user_stat, STAT)],
+        entry_points=[CallbackQueryHandler(get_user_stat, STAT)],
         states={
             StatStates.SHOW_STAT: [CallbackQueryHandler(get_user_stat)],
             StatStates.SELECT_QUESTION_BOX: [
@@ -121,6 +118,7 @@ def main():
     ]
 
     back_to_menu_handler = CallbackQueryHandler(back_to_menu, BACK_TO_MENU)
+    show_help_handler = CallbackQueryHandler(show_help, SHOW_HELP)
 
     application.add_handler(start_handler)
     application.add_handler(register_handler)
@@ -129,6 +127,7 @@ def main():
     application.add_handler(stat_handler)
     application.add_handler(admin_handler)
     application.add_handler(back_to_menu_handler)
+    application.add_handler(show_help_handler)
 
     application.add_handlers(history_handlers)
 

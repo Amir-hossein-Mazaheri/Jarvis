@@ -11,7 +11,18 @@ from src.utils.get_actions_keyboard import get_actions_keyboard
 
 
 async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    pass
+    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
+
+    text = (
+        "به ربات مدریت اعضای AICup خوش اومدی 👋\n\n"
+        "🤖 کارایی که میتونی با این ربات انجام بدی:\n\n"
+        "   🔴 جواب به آزمونی که هد تیمت برات گذاشته\n\n"
+        "   🔵 دیدن نتایج آرمون هایی که شرکت کردی\n\n"
+        "   🟢 دیدن سوالای آزمون هایی که قبلا برگزار شده با جواباشون\n\n"
+        "   🟣 ویرایش شماره دانشجویی یا اسم مستعارت توی ربات\n\n"
+    )
+
+    await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=text, reply_markup=await get_actions_keyboard(update, ctx))
 
 
 async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):

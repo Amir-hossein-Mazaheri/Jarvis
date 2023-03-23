@@ -1,4 +1,5 @@
 START = "start"
+SHOW_HELP = "show_help"
 REGISTER = "register"
 QUESTIONS = "questions"
 BACK_TO_MENU = "back_to_bot_menu"
