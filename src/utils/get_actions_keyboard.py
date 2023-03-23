@@ -3,6 +3,8 @@ from telegram.ext import ContextTypes
 
 from src.constants.commands import REGISTER, EDIT, QUESTIONS, STAT, QUESTIONS_HISTORY, SHOW_HELP
 from src.utils.is_user_registered import is_user_registered
+from src.utils.is_admin import is_admin
+from src.constants.commands import ADMIN
 
 
 async def get_actions_keyboard(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -11,7 +13,7 @@ async def get_actions_keyboard(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     if not await is_user_registered(user_id):
         keyboard_buttons.append(
-            [InlineKeyboardButton("Register", callback_data=REGISTER)])
+            [InlineKeyboardButton("➕ " + "ثبت نام", callback_data=REGISTER)])
     else:
         keyboard_buttons = [
             [InlineKeyboardButton("❓ " + "آزمون دادن",
@@ -23,5 +25,9 @@ async def get_actions_keyboard(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton(
                 "📃 " + " سول آزمون هایی که تا حالا برگزار شده", callback_data=QUESTIONS_HISTORY)]
         ]
+
+        if await is_admin(user_id):
+            keyboard_buttons.append([InlineKeyboardButton(
+                "🧑‍💼 " + "کارای ادمینی", callback_data=ADMIN)])
 
     return InlineKeyboardMarkup(keyboard_buttons)

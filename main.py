@@ -91,12 +91,14 @@ def main():
     )
 
     admin_handler = ConversationHandler(
-        entry_points=[CommandHandler(ADMIN, show_admin_actions)],
+        entry_points=[CallbackQueryHandler(show_admin_actions, ADMIN)],
         states={
-            AdminStates.SHOW_ADMIN_ACTIONS: [CallbackQueryHandler(show_admin_actions, BACK_TO_ADMIN_ACTIONS)],
+            AdminStates.SHOW_ADMIN_ACTIONS: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(show_admin_actions, BACK_TO_ADMIN_ACTIONS)],
             AdminStates.REGISTER_ADMIN: [
                 CallbackQueryHandler(register_admin, REGISTER_ADMIN)],
             AdminStates.ADMIN_ACTIONS: [CallbackQueryHandler(show_users_list, ADMIN_SHOW_USERS_LIST),
+                                        CallbackQueryHandler(
+                                            back_to_menu, BACK_TO_MENU),
                                         CallbackQueryHandler(
                                             show_admin_actions, BACK_TO_ADMIN_ACTIONS),
                                         MessageHandler(

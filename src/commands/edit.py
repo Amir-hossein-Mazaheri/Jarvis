@@ -8,8 +8,8 @@ from src.constants.other import LAST_MESSAGE_KEY
 from src.utils.get_actions_keyboard import get_actions_keyboard
 
 EDIT_ACTIONS = {
-    "student_code": "Student Code",
-    "nickname": "Nickname"
+    "student_code": "🧑‍💻 " + "شماره دانشجویی",
+    "nickname": "📛 " + "اسم مستعار"
 }
 
 
@@ -28,7 +28,7 @@ async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         [get_back_to_menu_button()]
     ])
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Please send me what you want to edit?", reply_markup=keyboard)
+    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="چیزی که میخوای عوض کنی رو انتخاب کن", reply_markup=keyboard)
     ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return EditStates.EDIT_DECIDER
@@ -39,26 +39,17 @@ async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
     if action == EDIT_ACTIONS["nickname"]:
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Please send me your new nickname")
+        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="حالا اسم مستعار جدیدت رو بگو بهم")
         ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return EditStates.EDIT_NICKNAME
     elif action == EDIT_ACTIONS["student_code"]:
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Please send me your new student code")
+        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="حالا شماره دانشجویی جدیدت رو بهم بگو")
         ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return EditStates.EDIT_STUDENT_CODE
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Invalid action.")
+    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="عملیات نادرست")
     ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return EditStates.ASK_TO_EDIT_WHAT
-
-
-async def cancel_edit(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    last_message = ctx.user_data[LAST_MESSAGE_KEY]
-
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Edit canceled.", reply_markup=await get_actions_keyboard(update, ctx))
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
-
-    return ConversationHandler.END

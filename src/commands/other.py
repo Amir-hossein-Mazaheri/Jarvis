@@ -4,10 +4,11 @@ from datetime import datetime
 
 from src.utils.db import db
 from src.utils.ignore_user import ignore_user
-from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, BACK_TO_MENU
+from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
 from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE, LAST_MESSAGE_KEY
 from src.utils.question_history_template import question_history_template
 from src.utils.get_actions_keyboard import get_actions_keyboard
+from src.utils.get_back_to_menu_button import get_back_to_menu_button
 
 
 async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -61,7 +62,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if len(questions) == 0:
-        return await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="There is no questions yet", reply_markup=await get_actions_keyboard(update, ctx))
+        return await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="فعلا سوالی نداریم", reply_markup=await get_actions_keyboard(update, ctx))
 
     questions_count = await db.question.count()
 
@@ -82,8 +83,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         )
 
     keyboard = InlineKeyboardMarkup(
-        [keyboard_buttons, [InlineKeyboardButton(
-            "Back To Menu", callback_data=BACK_TO_MENU)]]
+        [keyboard_buttons, [get_back_to_menu_button()]]
     )
 
     questions_template = ""
@@ -107,7 +107,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def back_to_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Bot Menu", reply_markup=await get_actions_keyboard(update, ctx))
+    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="🟥 " + "منوی ربات", reply_markup=await get_actions_keyboard(update, ctx))
     ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     # to make sure that it exits conversation wether it get used in conversation handler

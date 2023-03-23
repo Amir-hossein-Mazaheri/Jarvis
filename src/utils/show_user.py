@@ -4,7 +4,7 @@ def show_user(nickname: str, student_code: str, is_admin: bool, counter: int = N
     if counter:
         user += f"#{counter} "
 
-    user += f"{nickname} --- {student_code} --- {'Admin' if is_admin else 'Student'}\n\n"
+    user += f"{nickname} --- {student_code} --- {'ادمین' if is_admin else 'دانشجو'}\n\n"
 
     user += "---------------------------------------------------------------------------\n\n"
 

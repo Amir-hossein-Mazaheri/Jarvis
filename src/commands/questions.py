@@ -9,9 +9,10 @@ from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
 from src.utils.ignore_user import ignore_user
 from src.utils.get_actions_keyboard import get_actions_keyboard
+from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.constants.states import QuestionStates
 from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
-from src.constants.commands import START_QUESTIONS, CANCEL_QUESTIONS
+from src.constants.commands import START_QUESTIONS
 
 
 async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -25,8 +26,8 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("Start", callback_data=START_QUESTIONS), InlineKeyboardButton(
-                "Cancel", callback_data=CANCEL_QUESTIONS)]
+            [InlineKeyboardButton("🚀 " + "شروع", callback_data=START_QUESTIONS),
+             get_back_to_menu_button("❌ " + "بازگشت")]
         ]
     )
 
@@ -43,12 +44,18 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         })
 
     if not bool(question_box):
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Sorry there is no question to show you, you answered all of them either there is no question", reply_markup=await get_actions_keyboard(update, ctx))
+        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="فعلا آزمونی برای نمایش نداریم", reply_markup=await get_actions_keyboard(update, ctx))
         ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return ConversationHandler.END
 
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Are you sure that you want to start question?", reply_markup=keyboard)
+    text = (
+        f"آزمون {question_box.label}\n\n"
+        f"مدت زمان آزمون {question_box.duration} دقیقه\n\n"
+        "برای شروع آزمون <b>شروع</b> رو بزن"
+    )
+
+    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text=text, reply_markup=keyboard)
     ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     ctx.user_data[QUESTION_BOX_ID_KEY] = question_box.id
@@ -107,7 +114,7 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if not bool(answer):
-        sent_message = await ctx.bot.send_message(update.effective_chat.id, "Please choose one of the question button and try again.")
+        sent_message = await ctx.bot.send_message(update.effective_chat.id, "یکی از جوابایی که دیدی رو انتخاب کن")
         ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
         return QuestionStates.ANSWER_VALIDATOR
@@ -224,12 +231,3 @@ async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     return await show_questions_result(update, ctx)
-
-
-async def cancel_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
-
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="questions has been canceled", reply_markup=await get_actions_keyboard(update, ctx))
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
-
-    return ConversationHandler.END

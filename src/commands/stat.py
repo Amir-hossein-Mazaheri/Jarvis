@@ -31,11 +31,11 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if len(question_boxes) == 0:
-        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="You haven't participated in any exams", reply_markup=await get_actions_keyboard(update, ctx))
+        sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="توی هیچ آزمونی مشارکت نداشتی تا حالا", reply_markup=await get_actions_keyboard(update, ctx))
 
         return ConversationHandler.END
 
-    text = "Here is the list of question boxes you participated in: \n\n"
+    text = "📃 " + "لیست آزمون هایی که توش مشارکت داشتی: \n\n"
 
     keyboard_buttons = [
         [get_back_to_menu_button()]
@@ -93,7 +93,8 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
 
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("Back To List", callback_data=BACK_TO_STAT)],
+            [InlineKeyboardButton("بازگشت به لیست آزمون ها",
+                                  callback_data=BACK_TO_STAT)],
             [get_back_to_menu_button()]
         ]
     )
@@ -114,14 +115,5 @@ async def stat_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     if back_to_stat:
         return await get_user_stat(update, ctx)
-
-    return ConversationHandler.END
-
-
-async def cancel_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    last_message = ctx.user_data.get(LAST_MESSAGE_KEY)
-
-    sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="stat fetching canceled", reply_markup=await get_actions_keyboard(update, ctx))
-    ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
 
     return ConversationHandler.END

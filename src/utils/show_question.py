@@ -13,8 +13,8 @@ async def show_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE, question
         option.label, callback_data=option.id)], options))
 
     keyboard_buttons.append([
-        InlineKeyboardButton("⏭️ SKIP", callback_data=SKIP_QUESTIONS),
-        InlineKeyboardButton("🔚 QUIT", callback_data=QUIT_QUESTIONS)
+        InlineKeyboardButton("⏭️ رد کردن سوال", callback_data=SKIP_QUESTIONS),
+        InlineKeyboardButton("🔚 اتمام آزمون", callback_data=QUIT_QUESTIONS)
     ])
 
     keyboard = InlineKeyboardMarkup(
@@ -22,7 +22,7 @@ async def show_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE, question
     )
 
     text = (
-        "<b>Answer The Question</b>\n\n"
+        "❓ <b>سوالو جواب بده</b>\n\n"
         f"{question}"
     )
 
