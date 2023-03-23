@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.utils.is_admin import is_admin
+from src.utils.get_actions_keyboard import get_actions_keyboard
 
 
 async def ignore_command(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -9,6 +10,6 @@ async def ignore_command(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     admin = await is_admin(user_id)
 
     if not admin:
-        await ctx.bot.send_message(chat_id=update.effective_chat.id, text="You don't have access.")
+        await ctx.bot.send_message(chat_id=update.effective_chat.id, text="You don't have access.", reply_markup=await get_actions_keyboard(update, ctx))
 
     return not admin
