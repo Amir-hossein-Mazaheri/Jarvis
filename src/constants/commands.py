@@ -1,7 +1,7 @@
 START = "start"
 REGISTER = "register"
 QUESTIONS = "questions"
-CANCEL = "cancel"
+BACK_TO_MENU = "back_to_bot_menu"
 EDIT = "edit"
 STAT = "stat"
 ADMIN = "admin"

@@ -5,7 +5,7 @@ from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.db import db
 from src.utils.ignore_user import ignore_user
 from src.utils.question_box_result_template import question_box_result_template
-from src.constants.commands import CANCEL, BACK_TO_STAT
+from src.constants.commands import BACK_TO_MENU, BACK_TO_STAT
 from src.constants.states import StatStates
 from src.constants.other import LAST_MESSAGE_KEY
 
@@ -37,7 +37,7 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = "Here is the list of question boxes you participated in: \n\n"
 
     keyboard_buttons = [
-        [InlineKeyboardButton("Back To Menu", callback_data=CANCEL)]
+        [InlineKeyboardButton("Back To Menu", callback_data=BACK_TO_MENU)]
     ]
 
     keyboard_buttons.extend(list(map(lambda qb: [InlineKeyboardButton(
@@ -93,7 +93,7 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
     keyboard = InlineKeyboardMarkup(
         [
             [InlineKeyboardButton("Back To List", callback_data=BACK_TO_STAT)],
-            [InlineKeyboardButton("Back To Menu", callback_data=CANCEL)]
+            [InlineKeyboardButton("Back To Menu", callback_data=BACK_TO_MENU)]
         ]
     )
 

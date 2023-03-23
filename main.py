@@ -6,20 +6,20 @@ import os
 import logging
 
 from src.utils.db import connect_to_db
-from src.constants.commands import START, REGISTER, CANCEL, EDIT, QUESTIONS, SKIP_QUESTIONS,\
+from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTIONS, SKIP_QUESTIONS,\
     QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS, STAT, BACK_TO_STAT, QUESTIONS_HISTORY,\
     NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, ADMIN, REGISTER_ADMIN,\
     ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates, AdminStates
 from src.commands.register import start, ask_for_student_code, register_student_code,\
-    register_nickname, cancel_registration
-from src.commands.edit import ask_to_edit_what, edit_decider, cancel_edit
-from src.commands.questions import send_questions, cancel_questions, answer_validator,\
+    register_nickname
+from src.commands.edit import ask_to_edit_what, edit_decider
+from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase
-from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list, cancel_admin
-from src.commands.stat import stat_decider, cancel_stat, get_user_stat, show_question_box_stat
-from src.commands.other import questions_history
+from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list
+from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
+from src.commands.other import questions_history, back_to_menu
 
 # loads .env content into env variables
 load_dotenv()
@@ -44,12 +44,12 @@ def main():
             ask_for_student_code, REGISTER)],
         states={
             RegisterStates.ASK_FOR_STUDENT_CODE: [CommandHandler(REGISTER, ask_for_student_code)],
-            RegisterStates.REGISTER_STUDENT_CODE: [CallbackQueryHandler(cancel_registration, CANCEL), MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
-            RegisterStates.REGISTER_NICKNAME: [CallbackQueryHandler(cancel_registration, CANCEL),
+            RegisterStates.REGISTER_STUDENT_CODE: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
+            RegisterStates.REGISTER_NICKNAME: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU),
                                                MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.CREATE))]
         },
-        fallbacks=[CommandHandler(CANCEL, cancel_registration)]
+        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
     )
 
     edit_handler = ConversationHandler(
@@ -57,26 +57,26 @@ def main():
             EDIT, ask_to_edit_what), CallbackQueryHandler(ask_to_edit_what, EDIT)],
         states={
             EditStates.ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
-            EditStates.EDIT_DECIDER: [CallbackQueryHandler(cancel_edit, CANCEL), CallbackQueryHandler(edit_decider)],
+            EditStates.EDIT_DECIDER: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(edit_decider)],
             EditStates.EDIT_STUDENT_CODE: [MessageHandler(
                 filters.TEXT, register_student_code(RegisterMode.EDIT))],
             EditStates.EDIT_NICKNAME: [MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.EDIT))]
         },
-        fallbacks=[CommandHandler(CANCEL, cancel_edit)]
+        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
     )
 
     question_handler = ConversationHandler(
         entry_points=[CommandHandler(
             QUESTIONS, prep_phase), CallbackQueryHandler(prep_phase, QUESTIONS)],
         states={
-            QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(cancel_questions, CANCEL_QUESTIONS)],
+            QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(back_to_menu, BACK_TO_MENU)],
             QuestionStates.ANSWER_VALIDATOR: [CallbackQueryHandler(skip_question, SKIP_QUESTIONS),
                                               CallbackQueryHandler(
                                                   quit_questions, QUIT_QUESTIONS),
                                               CallbackQueryHandler(answer_validator)],
         },
-        fallbacks=[CommandHandler(CANCEL, cancel_questions)]
+        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
     )
 
     stat_handler = ConversationHandler(
@@ -85,12 +85,12 @@ def main():
         states={
             StatStates.SHOW_STAT: [CallbackQueryHandler(get_user_stat)],
             StatStates.SELECT_QUESTION_BOX: [
-                CallbackQueryHandler(cancel_stat, CANCEL),
+                CallbackQueryHandler(back_to_menu, BACK_TO_MENU),
                 CallbackQueryHandler(show_question_box_stat)],
             StatStates.DECIDER: [CallbackQueryHandler(stat_decider, BACK_TO_STAT),
-                                 CallbackQueryHandler(cancel_stat, CANCEL)]
+                                 CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
         },
-        fallbacks=[CommandHandler(CANCEL, cancel_stat)]
+        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
     )
 
     admin_handler = ConversationHandler(
@@ -107,7 +107,7 @@ def main():
                                                 'application/json'),
                                             add_question_box),
                                         CallbackQueryHandler(
-                                            cancel_admin, CANCEL),
+                                            back_to_menu, BACK_TO_MENU),
                                         CallbackQueryHandler(add_question_box, ADMIN_PROMPT_ADD_QUESTION_BOX)],
         },
         fallbacks=[]
@@ -120,12 +120,15 @@ def main():
         CallbackQueryHandler(questions_history, PREV_QUESTIONS_PAGE)
     ]
 
+    back_to_menu_handler = CallbackQueryHandler(back_to_menu, BACK_TO_MENU)
+
     application.add_handler(start_handler)
     application.add_handler(register_handler)
     application.add_handler(edit_handler)
     application.add_handler(question_handler)
     application.add_handler(stat_handler)
     application.add_handler(admin_handler)
+    application.add_handler(back_to_menu_handler)
 
     application.add_handlers(history_handlers)
 

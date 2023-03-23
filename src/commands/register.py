@@ -5,7 +5,7 @@ from src.utils.db import db
 from src.utils.is_user_registered import is_user_registered
 from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, LAST_MESSAGE_KEY
 from src.constants.states import RegisterStates, EditStates
-from src.constants.commands import CANCEL
+from src.constants.commands import BACK_TO_MENU
 from src.utils.get_actions_keyboard import get_actions_keyboard
 
 
@@ -28,7 +28,7 @@ async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     keyboard = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("Cancel", callback_data=CANCEL)]
+            [InlineKeyboardButton("Cancel", callback_data=BACK_TO_MENU)]
         ]
     )
 
@@ -83,7 +83,8 @@ def register_student_code(mode: RegisterMode):
             reply_text = "now sends me your nick name on the bot"
             keyboard = InlineKeyboardMarkup(
                 [
-                    [InlineKeyboardButton("Cancel", callback_data=CANCEL)]
+                    [InlineKeyboardButton(
+                        "Cancel", callback_data=BACK_TO_MENU)]
                 ]
             )
         else:

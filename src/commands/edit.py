@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 from src.constants.states import EditStates
 from src.utils.ignore_user import ignore_user
 from src.constants.other import LAST_MESSAGE_KEY
-from src.constants.commands import CANCEL
+from src.constants.commands import BACK_TO_MENU
 from src.utils.get_actions_keyboard import get_actions_keyboard
 
 EDIT_ACTIONS = {
@@ -26,7 +26,7 @@ async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton(EDIT_ACTIONS["nickname"],
                               callback_data=EDIT_ACTIONS["nickname"])],
         [InlineKeyboardButton("Back",
-                              callback_data=CANCEL)]
+                              callback_data=BACK_TO_MENU)]
     ])
 
     sent_message = await ctx.bot.edit_message_text(message_id=last_message, chat_id=update.effective_chat.id, text="Please send me what you want to edit?", reply_markup=keyboard)
