@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 from src.utils.db import db
@@ -126,7 +126,7 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         {
             "label": str,
             "duration": int,
-            "deadline": iso time,
+            "deadline": int,
             "questions": [
               {
                 "label": str,
@@ -145,10 +145,14 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     """
     parsed_file = json.loads(await file.download_as_bytearray())
 
+    # deadline is the number of days from now which this line is making that time with timestamp
+    real_deadline = datetime.now(
+    ) + timedelta(days=int(parsed_file["duration"]))
+
     question_box = await db.questionsbox.create(
         data={
             "label": parsed_file["label"],
-            "duration": int(parsed_file["duration"]),
+            "duration": real_deadline,
             "deadline": datetime.fromisoformat(parsed_file["deadline"]),
         }
     )
