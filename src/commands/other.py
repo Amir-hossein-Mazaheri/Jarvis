@@ -8,6 +8,7 @@ from src.utils.question_history_template import question_history_template
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
+from src.utils.get_user import get_user
 from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
 from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE
 
@@ -30,6 +31,8 @@ async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
     message_sender = send_message(update, ctx)
+    user_id = update.effective_user.id
+    user = await get_user(user_id)
 
     if should_ignore:
         return ConversationHandler.END
@@ -52,7 +55,8 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "question_box": {
                 "deadline": {
                     "lte": datetime.now()
-                }
+                },
+                "team": user.team
             }
         },
         take=QUESTIONS_PER_PAGE,
