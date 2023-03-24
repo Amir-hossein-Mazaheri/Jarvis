@@ -13,7 +13,7 @@ model User {
     id                         Int            @id @default(autoincrement())
     tel_id                     BigInt         @unique
     role                       UserRole       @default(STUDENT)
-    team                       Team
+    team                       Team           @default(NO_TEAM)
     name                       String
     nickname                   String         @db.VarChar(255)
     student_code               String         @db.VarChar(20)
@@ -65,10 +65,11 @@ enum Team {
     BACK_END
     GRAPHIC
     CLIENT
-    BRANDIND
+    BRANDING
     EXECUTIVE
     KERNEL
     HR
     DEVOPS
     QA
+    NO_TEAM
 }

@@ -9,15 +9,16 @@ from src.utils.db import connect_to_db
 from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTIONS, SKIP_QUESTIONS,\
     QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS, STAT, BACK_TO_STAT, QUESTIONS_HISTORY,\
     NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, ADMIN, REGISTER_ADMIN,\
-    ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, SHOW_HELP
+    ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, SHOW_HELP, ADMIN_ADD_HEAD, \
+    ADMIN_SHOW_USERS_LIST_BUTTONS
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates, AdminStates
 from src.commands.register import start, ask_for_student_code, register_student_code,\
-    register_nickname
+    register_nickname, register_team
 from src.commands.edit import ask_to_edit_what, edit_decider
 from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase
-from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list
+from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list, add_head, show_users_list_buttons, admin_decider
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
 from src.commands.other import questions_history, back_to_menu, show_help, cleaner
 
@@ -46,6 +47,7 @@ def main():
             ask_for_student_code, REGISTER)],
         states={
             RegisterStates.REGISTER_STUDENT_CODE: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), MessageHandler(filters.TEXT, register_student_code(RegisterMode.CREATE))],
+            RegisterStates.REGISTER_TEAM: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(register_team(RegisterMode.CREATE))],
             RegisterStates.REGISTER_NICKNAME: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU),
                                                MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.CREATE))]
@@ -62,7 +64,9 @@ def main():
             EditStates.EDIT_STUDENT_CODE: [MessageHandler(
                 filters.TEXT, register_student_code(RegisterMode.EDIT))],
             EditStates.EDIT_NICKNAME: [MessageHandler(
-                filters.TEXT, register_nickname(RegisterMode.EDIT))]
+                filters.TEXT, register_nickname(RegisterMode.EDIT))],
+            EditStates.EDIT_TEAM: [CallbackQueryHandler(
+                register_team(RegisterMode.EDIT))]
         },
         fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
     )
@@ -107,7 +111,9 @@ def main():
             AdminStates.SHOW_ADMIN_ACTIONS: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(show_admin_actions, BACK_TO_ADMIN_ACTIONS)],
             AdminStates.REGISTER_USER_AS_AN_ADMIN: [
                 CallbackQueryHandler(register_admin, REGISTER_ADMIN)],
-            AdminStates.ADMIN_ACTIONS: [CallbackQueryHandler(show_users_list, ADMIN_SHOW_USERS_LIST),
+            AdminStates.ADMIN_ACTIONS: [CallbackQueryHandler(show_users_list_buttons, ADMIN_SHOW_USERS_LIST_BUTTONS),
+                                        CallbackQueryHandler(
+                                            show_users_list, ADMIN_SHOW_USERS_LIST),
                                         CallbackQueryHandler(
                                             back_to_menu, BACK_TO_MENU),
                                         CallbackQueryHandler(
@@ -118,7 +124,11 @@ def main():
                                             add_question_box),
                                         CallbackQueryHandler(
                                             back_to_menu, BACK_TO_MENU),
-                                        CallbackQueryHandler(add_question_box, ADMIN_PROMPT_ADD_QUESTION_BOX)],
+                                        CallbackQueryHandler(
+                                            add_question_box, ADMIN_PROMPT_ADD_QUESTION_BOX),
+                                        ],
+            AdminStates.ADMIN_DECIDER: [CallbackQueryHandler(admin_decider)],
+            AdminStates.ADD_HEAD: [CallbackQueryHandler(add_head)]
         },
         fallbacks=[]
     )

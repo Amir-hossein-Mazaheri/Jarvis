@@ -3,14 +3,14 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from src.utils.ignore_user import ignore_user
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
-from src.utils.get_actions_keyboard import get_actions_keyboard
+from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.utils.send_message import send_message
 from src.constants.states import EditStates
-from src.constants.other import LAST_MESSAGE_KEY
 
 EDIT_ACTIONS = {
     "student_code": "🧑‍💻 " + "شماره دانشجویی",
-    "nickname": "📛 " + "اسم مستعار"
+    "nickname": "📛 " + "اسم مستعار",
+    "team": "🧑‍🤝‍🧑 " + "تیم"
 }
 
 
@@ -21,13 +21,15 @@ async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if should_ignore:
         return ConversationHandler.END
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(EDIT_ACTIONS["student_code"],
-                              callback_data=EDIT_ACTIONS["student_code"])],
-        [InlineKeyboardButton(EDIT_ACTIONS["nickname"],
-                              callback_data=EDIT_ACTIONS["nickname"])],
-        [get_back_to_menu_button()]
-    ])
+    keyboard_buttons = []
+
+    for key in EDIT_ACTIONS:
+        keyboard_buttons.append([InlineKeyboardButton(
+            EDIT_ACTIONS[key], callback_data=EDIT_ACTIONS[key])])
+
+    keyboard_buttons.append([get_back_to_menu_button()])
+
+    keyboard = InlineKeyboardMarkup(keyboard_buttons)
 
     await message_sender(text="چیزی که میخوای عوض کنی رو انتخاب کن", reply_markup=keyboard)
 
@@ -44,6 +46,9 @@ async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     elif action == EDIT_ACTIONS["student_code"]:
         await message_sender(text="حالا شماره دانشجویی جدیدت رو بهم بگو")
         return EditStates.EDIT_STUDENT_CODE
+    elif action == EDIT_ACTIONS["team"]:
+        await message_sender(text="تیمی که رفتی توش رو انتخاب کن", reply_markup=get_teams_keyboard())
+        return EditStates.EDIT_TEAM
 
     await message_sender(text="عملیات نادرست")
 

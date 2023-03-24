@@ -1,5 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
+from prisma.enums import Team
 
 from src.utils.db import db
 from src.utils.is_user_registered import is_user_registered
@@ -7,6 +8,7 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.is_user_registered import is_user_registered
 from src.utils.send_message import send_message
+from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, IS_USER_REGISTERED
 from src.constants.states import RegisterStates, EditStates
 
@@ -91,6 +93,52 @@ def register_student_code(mode: RegisterMode):
         keyboard = None
 
         if mode == RegisterMode.CREATE:
+            reply_text = "حالا تیمی که توشی رو انتخاب کن، این مرحله رو با دقت انجام بده"
+            keyboard = get_teams_keyboard()
+        else:
+            reply_text = "عالیه، تیمیت تغییر کرد"
+            keyboard = await get_actions_keyboard(update, ctx)
+
+        await message_sender(text=reply_text, reply_markup=keyboard)
+
+        if mode == RegisterMode.CREATE:
+            return RegisterStates.REGISTER_TEAM
+        else:
+            return ConversationHandler.END
+
+    return register_student_code_action
+
+
+def register_team(mode: RegisterMode):
+    async def register_team_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        user_id = update.effective_user.id
+        message_sender = send_message(update, ctx)
+        callback_team = update.callback_query.data
+
+        selected_team = None
+
+        for team in Team:
+            if callback_team == team.value:
+                selected_team = team.value
+                break
+
+        if not selected_team:
+            await message_sender(text="تیمی که انتخاب کردی وجود ندارد دوباره انتخاب کن", reply_markup=get_teams_keyboard())
+            return RegisterStates.REGISTER_TEAM
+
+        await db.user.update(
+            where={
+                "tel_id": user_id
+            },
+            data={
+                "team": selected_team
+            }
+        )
+
+        keyboard = None
+        reply_text = ""
+
+        if mode == RegisterMode.CREATE:
             reply_text = "حالا اسم مستعاری که می خوای داشته باشی رو هم برام بفرست (اگه نمی خوای کنسل رو بزن)"
             keyboard = InlineKeyboardMarkup(
                 [
@@ -108,7 +156,7 @@ def register_student_code(mode: RegisterMode):
         else:
             return ConversationHandler.END
 
-    return register_student_code_action
+    return register_team_action
 
 
 def register_nickname(mode: RegisterMode):

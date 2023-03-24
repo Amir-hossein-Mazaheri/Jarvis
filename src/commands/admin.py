@@ -1,6 +1,7 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime, timedelta
+from prisma.enums import UserRole
 import json
 
 from src.utils.db import db
@@ -10,10 +11,11 @@ from src.utils.ignore_user import ignore_user
 from src.utils.show_user import show_user
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
+from src.utils.get_users_keyboard import get_users_keyboard
 from src.utils.is_admin import is_admin
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates
-from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
+from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, ADMIN_ADD_HEAD, ADMIN_SHOW_USERS_LIST_BUTTONS
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -29,7 +31,7 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if should_ignore:
         return ConversationHandler.END
 
-    if is_there_admin and not is_user_admin:
+    if is_there_any_admin and (not is_user_admin):
         await ignore_command(update, ctx)
         return ConversationHandler.END
 
@@ -56,6 +58,8 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup(
         [
             keyboard_buttons,
+            [InlineKeyboardButton("🧑‍💼 " + "افزودن هد",
+                                  callback_data=ADMIN_SHOW_USERS_LIST_BUTTONS)],
             [get_back_to_menu_button()]
         ]
     )
@@ -80,7 +84,7 @@ async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "tel_id": user_id
         },
         data={
-            "is_admin": True
+            "role": UserRole.ADMIN
         }
     )
 
@@ -194,11 +198,7 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if should_ignore:
         return ConversationHandler.END
 
-    users = await db.user.find_many(
-        order={
-            "is_admin": "desc"
-        }
-    )
+    users = await db.user.find_many()
 
     keyboard = InlineKeyboardMarkup(
         [
@@ -214,8 +214,47 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     for i, user in enumerate(users):
         users_template += show_user(user.nickname, user.student_code,
-                                    user.is_admin, i + 1)
+                                    user.role, i + 1)
 
     await message_sender(text=users_template, reply_markup=keyboard)
 
     return AdminStates.ADMIN_ACTIONS
+
+
+async def show_users_list_buttons(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    message_sender = send_message(update, ctx)
+
+    await message_sender(text="کدوم کاربر رو میخوای هد کنی؟", reply_markup=await get_users_keyboard())
+
+    return AdminStates.ADD_HEAD
+
+
+async def admin_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    return AdminStates.ADD_HEAD
+
+
+async def add_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = int(update.callback_query.data)
+    message_sender = send_message(update, ctx)
+
+    await db.user.update(
+        where={
+            "id": user_id
+        },
+        data={
+            "role": UserRole.HEAD
+        }
+    )
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    await message_sender(text="خب این یارو رو هد کردی، ماشالا", reply_markup=keyboard)
+
+    return AdminStates.SHOW_ADMIN_ACTIONS
