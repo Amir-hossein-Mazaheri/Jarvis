@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  bot:
+    build: ./
+    restart: on-failure
+    secrets:
+      - db
+      - db_user
+      - db_pass
+      - bot_token
+  db:
+    image: postgres:15.1-alpine
+    restart: always
+    secrets:
+      - db
+      - db_user
+      - db_pass
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/db
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_pass
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+    driver: local
+
+secrets:
+  db:
+    file: db.txt
+  db_user:
+    file: db_user.txt
+  db_pass:
+    file: db_pass.txt
+  bot_token:
+    file: bot_token.txt
