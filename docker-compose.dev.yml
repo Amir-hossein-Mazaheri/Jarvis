@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: staff-bot-admin
       POSTGRES_PASSWORD: '@mir1990'
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data_dev:/var/lib/postgresql/data
     ports:
       - target: 5432
         published: 6000
@@ -17,5 +17,5 @@ services:
         mode: host
 
 volumes:
-  db_data:
+  db_data_dev:
     driver: local
