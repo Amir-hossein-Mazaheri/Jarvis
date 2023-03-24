@@ -108,3 +108,7 @@ async def back_to_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     # to make sure that it exits conversation wether it get used in conversation handler
     return ConversationHandler.END
+
+
+async def cleaner(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await update.message.delete()

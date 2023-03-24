@@ -19,7 +19,7 @@ from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
-from src.commands.other import questions_history, back_to_menu, show_help
+from src.commands.other import questions_history, back_to_menu, show_help, cleaner
 
 # loads .env content into env variables
 load_dotenv()
@@ -40,6 +40,8 @@ def main():
     start_handler = CommandHandler(START, start)
 
     register_handler = ConversationHandler(
+        per_chat=True,
+        per_user=True,
         entry_points=[CallbackQueryHandler(
             ask_for_student_code, REGISTER)],
         states={
@@ -48,23 +50,27 @@ def main():
                                                MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.CREATE))]
         },
-        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
+        fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
     )
 
     edit_handler = ConversationHandler(
+        per_chat=True,
+        per_user=True,
         entry_points=[CallbackQueryHandler(ask_to_edit_what, EDIT)],
         states={
-            EditStates.ASK_TO_EDIT_WHAT: [CommandHandler(EDIT, ask_to_edit_what)],
             EditStates.EDIT_DECIDER: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(edit_decider)],
             EditStates.EDIT_STUDENT_CODE: [MessageHandler(
                 filters.TEXT, register_student_code(RegisterMode.EDIT))],
             EditStates.EDIT_NICKNAME: [MessageHandler(
                 filters.TEXT, register_nickname(RegisterMode.EDIT))]
         },
-        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
+        fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
     )
 
     question_handler = ConversationHandler(
+        per_message=True,
+        per_chat=True,
+        per_user=True,
         entry_points=[CallbackQueryHandler(prep_phase, QUESTIONS)],
         states={
             QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(back_to_menu, BACK_TO_MENU)],
@@ -73,10 +79,13 @@ def main():
                                                   quit_questions, QUIT_QUESTIONS),
                                               CallbackQueryHandler(answer_validator)],
         },
-        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
+        fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
     )
 
     stat_handler = ConversationHandler(
+        per_message=True,
+        per_chat=True,
+        per_user=True,
         entry_points=[CallbackQueryHandler(get_user_stat, STAT)],
         states={
             StatStates.SHOW_STAT: [CallbackQueryHandler(get_user_stat)],
@@ -86,10 +95,12 @@ def main():
             StatStates.DECIDER: [CallbackQueryHandler(stat_decider, BACK_TO_STAT),
                                  CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
         },
-        fallbacks=[CommandHandler(BACK_TO_MENU, back_to_menu)]
+        fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
     )
 
     admin_handler = ConversationHandler(
+        per_chat=True,
+        per_user=True,
         entry_points=[CallbackQueryHandler(
             show_admin_actions, ADMIN), CommandHandler(ADMIN, show_admin_actions)],
         states={
@@ -130,6 +141,8 @@ def main():
     application.add_handler(stat_handler)
     application.add_handler(back_to_menu_handler)
     application.add_handler(show_help_handler)
+    application.add_handler(MessageHandler(
+        filters.ALL & (~filters.COMMAND), cleaner))
 
     application.add_handlers(history_handlers)
 

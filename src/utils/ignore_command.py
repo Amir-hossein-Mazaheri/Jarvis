@@ -11,6 +11,6 @@ async def ignore_command(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     message_sender = send_message(update, ctx)
 
     if not admin:
-        await message_sender(text="You don't have access.", reply_markup=await get_actions_keyboard(update, ctx), edit=False)
+        await message_sender(text="به این بخش دسترسی نداری داپش", reply_markup=await get_actions_keyboard(update, ctx))
 
     return not admin

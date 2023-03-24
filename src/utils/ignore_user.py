@@ -11,6 +11,6 @@ async def ignore_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     message_sender = send_message(update, ctx)
 
     if not is_registered:
-        await message_sender(text="اول ثبت نام کن", reply_markup=await get_actions_keyboard(update, ctx), edit=False)
+        await message_sender(text="اول ثبت نام کن", reply_markup=await get_actions_keyboard(update, ctx))
 
     return not is_registered

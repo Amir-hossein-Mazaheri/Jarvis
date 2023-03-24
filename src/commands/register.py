@@ -59,6 +59,8 @@ def register_student_code(mode: RegisterMode):
         student_code = update.message.text
         message_sender = send_message(update, ctx)
 
+        await update.message.delete()
+
         if len(student_code) != STUDENT_CODE_LENGTH:
             await message_sender(text="کد دانشجویی که فرستادی اشتباهه دوباره کد دانشجوییت رو بفرست")
 
@@ -99,7 +101,7 @@ def register_student_code(mode: RegisterMode):
             reply_text = "عالیه، شماره دانشجوییت تغییر کرد"
             keyboard = await get_actions_keyboard(update, ctx)
 
-        await message_sender(text=reply_text, reply_markup=keyboard, edit=False)
+        await message_sender(text=reply_text, reply_markup=keyboard)
 
         if mode == RegisterMode.CREATE:
             return RegisterStates.REGISTER_NICKNAME
@@ -114,6 +116,8 @@ def register_nickname(mode: RegisterMode):
         message_sender = send_message(update, ctx)
         user_id = update.effective_user.id
         nickname = update.message.text
+
+        await update.message.delete()
 
         await db.user.update(
             where={
@@ -131,7 +135,7 @@ def register_nickname(mode: RegisterMode):
         else:
             reply_text = "عالیه، اسم مستعارت تغییر کرد"
 
-        await message_sender(text=reply_text, reply_markup=await get_actions_keyboard(update, ctx), edit=False)
+        await message_sender(text=reply_text, reply_markup=await get_actions_keyboard(update, ctx))
 
         return ConversationHandler.END
 

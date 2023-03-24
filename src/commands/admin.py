@@ -10,6 +10,7 @@ from src.utils.ignore_user import ignore_user
 from src.utils.show_user import show_user
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
+from src.utils.is_admin import is_admin
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX
@@ -18,9 +19,18 @@ from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
     is_there_any_admin = await is_there_admin()
+    is_user_admin = await is_admin(update, ctx)
     message_sender = send_message(update, ctx)
+    message = update.message
+
+    if message:
+        await message.delete()
 
     if should_ignore:
+        return ConversationHandler.END
+
+    if is_there_admin and not is_user_admin:
+        await ignore_command(update, ctx)
         return ConversationHandler.END
 
     keyboard_buttons = []
@@ -29,7 +39,7 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         keyboard_buttons.append(InlineKeyboardButton(
             "ثبت به عنوان ادمین", callback_data=REGISTER_ADMIN))
 
-        await message_sender(text="ادمینی وجود ندارد بدو ثبت کن خودتو هرچه زودتر", reply_markup=InlineKeyboardMarkup([keyboard_buttons]), edit=False)
+        await message_sender(text="ادمینی وجود ندارد بدو ثبت کن خودتو هرچه زودتر", reply_markup=InlineKeyboardMarkup([keyboard_buttons]))
 
         return AdminStates.REGISTER_USER_AS_AN_ADMIN
 
