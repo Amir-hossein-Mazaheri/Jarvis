@@ -8,7 +8,7 @@ from src.utils.send_message import send_message
 from src.constants.other import CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
 
 
-async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE, prefix: str = None):
     question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
     user_id = update.effective_user.id
     message_sender = send_message(update, ctx)
@@ -31,7 +31,7 @@ async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     total_answers = ctx.user_data.get(TOTAL_QUESTIONS_KEY)
 
     results = question_box_result_template(
-        correct_answers, wrong_answers, total_answers)
+        correct_answers, wrong_answers, total_answers, prefix)
 
     await message_sender(text=results, reply_markup=await get_actions_keyboard(update, ctx))
 

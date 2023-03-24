@@ -11,9 +11,15 @@ from src.utils.ignore_user import ignore_user
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
+from src.utils.set_timeout import set_timeout
+from src.utils.get_user import get_user
 from src.constants.states import QuestionStates
-from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
+from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, QUESTIONS_TIME_IS_UP
 from src.constants.commands import START_QUESTIONS
+
+
+async def time_is_up(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    return await show_questions_result(update, ctx, "زمان آزمونت تموم شده\n\n")
 
 
 async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -32,11 +38,14 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ]
     )
 
+    user = await get_user(user_id)
+
     question_box = await db.questionsbox.find_first(
         where={
             "deadline": {
-                "gte": datetime.now()
+                "gte": datetime.now(),
             },
+            "team": user.team,
             "users": {
                 "none": {
                     "tel_id": user_id
@@ -77,7 +86,8 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "created_at": "desc"
         },
         include={
-            "options": True
+            "options": True,
+            "question_box": True
         }
     )
 
@@ -89,12 +99,21 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ctx.user_data[TOTAL_QUESTIONS_KEY] = questions_count
     ctx.user_data[SEEN_QUESTIONS_KEY] = json.dumps([question.id])
 
+    def set_time():
+        ctx.user_data[QUESTIONS_TIME_IS_UP] = True
+
+    set_timeout(set_time, question.question_box.duration * 60 * 1000)
+
     return QuestionStates.ANSWER_VALIDATOR
 
 
 async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_user(update, ctx)
     message_sender = send_message(update, ctx)
+    question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
+
+    if question_time_is_up:
+        return await time_is_up(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -202,6 +221,11 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     if should_ignore:
         return ConversationHandler.END
+
+    question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
+
+    if question_time_is_up:
+        return await time_is_up(update, ctx)
 
     question_id = ctx.user_data.get(QUESTION_ID_KEY)
     seen_questions = json.loads(ctx.user_data.get(SEEN_QUESTIONS_KEY))
