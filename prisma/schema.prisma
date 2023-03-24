@@ -12,7 +12,8 @@ datasource db {
 model User {
     id                         Int            @id @default(autoincrement())
     tel_id                     BigInt         @unique
-    is_admin                   Boolean        @default(false)
+    role                       UserRole       @default(STUDENT)
+    team                       Team
     name                       String
     nickname                   String         @db.VarChar(255)
     student_code               String         @db.VarChar(20)
@@ -45,9 +46,29 @@ model QuestionOption {
 model QuestionsBox {
     id        Int        @id @default(autoincrement())
     label     String     @db.VarChar(255)
+    team      Team
     duration  Int
     deadline  DateTime
     createdAt DateTime   @default(now())
     questions Question[]
     users     User[]
+}
+
+enum UserRole {
+    STUDENT
+    HEAD
+    ADMIN
+}
+
+enum Team {
+    FRONT_END
+    BACK_END
+    GRAPHIC
+    CLIENT
+    BRANDIND
+    EXECUTIVE
+    KERNEL
+    HR
+    DEVOPS
+    QA
 }

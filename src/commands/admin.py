@@ -131,6 +131,7 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "label": str,
             "duration": int,
             "deadline": int,
+            "team": one of team enum value,
             "questions": [
               {
                 "label": str,
@@ -158,6 +159,7 @@ async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "label": parsed_file["label"],
             "duration": int(parsed_file["duration"]),
             "deadline": real_deadline,
+            "team": parsed_file["team"]
         }
     )
 
