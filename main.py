@@ -29,6 +29,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+program_mode = os.getenv("MODE")
 
 
 def main():
@@ -128,7 +129,8 @@ def main():
                                             add_question_box, ADMIN_PROMPT_ADD_QUESTION_BOX),
                                         ],
             AdminStates.ADMIN_DECIDER: [CallbackQueryHandler(admin_decider)],
-            AdminStates.ADD_HEAD: [CallbackQueryHandler(add_head)]
+            AdminStates.ADD_HEAD: [CallbackQueryHandler(
+                back_to_menu, BACK_TO_MENU), CallbackQueryHandler(add_head)]
         },
         fallbacks=[]
     )
@@ -156,7 +158,17 @@ def main():
 
     application.add_handlers(history_handlers)
 
-    application.run_polling()
+    if program_mode.lower() == 'production':
+        application.run_webhook(
+            listen="",
+            port=8443,
+            secret_token=os.getenv("BOT_SECRET"),
+            key="private.key",
+            cert="cert.pem",
+            webhook_url="https://amirhossein-mazaheri.ir:8443"
+        )
+    else:
+        application.run_polling()
 
 
 if __name__ == '__main__':

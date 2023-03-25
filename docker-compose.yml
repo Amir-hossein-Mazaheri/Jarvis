@@ -9,6 +9,7 @@ services:
       - db_user
       - db_pass
       - bot_token
+      - bot_secret
   db:
     image: postgres:15.1-alpine
     restart: always
@@ -29,10 +30,12 @@ volumes:
 
 secrets:
   db:
-    file: db.txt
+    file: ./db.txt
   db_user:
-    file: db_user.txt
+    file: ./db_user.txt
   db_pass:
-    file: db_pass.txt
+    file: ./db_pass.txt
   bot_token:
-    file: bot_token.txt
+    file: ./bot_token.txt
+  bot_secret:
+    file: ./bot_secret.txt
