@@ -12,7 +12,9 @@ ENV PYTHONFAULTHANDLER 1
 
 RUN pip install pipenv
 
-COPY requirements.txt ./
+COPY Pipfile Pipfile.lock
+
+RUN pipenv run pip freeze > requirements.txt
 
 RUN pip install -r requirements.txt
 
