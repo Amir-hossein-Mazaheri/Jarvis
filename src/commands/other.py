@@ -5,7 +5,7 @@ from datetime import datetime
 from src.utils.db import db
 from src.utils.ignore_user import ignore_user
 from src.utils.question_history_template import question_history_template
-from src.utils.get_actions_keyboard import get_actions_keyboard
+from src.utils.get_actions_keyboard import get_actions_keyboard, KeyboardActions
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
 from src.utils.get_user import get_user
@@ -67,24 +67,24 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
     if len(questions) == 0:
-        return await message_sender(text="فعلا سوالی نداریم", reply_markup=await get_actions_keyboard(update, ctx))
+        return await message_sender(text="فعلا سوالی نداریم", reply_markup=await get_actions_keyboard(update, ctx, [KeyboardActions.HISTORY]))
 
     questions_count = await db.question.count()
 
-    total_pages = questions_count // QUESTIONS_PER_PAGE
+    total_pages = (questions_count // QUESTIONS_PER_PAGE) + 1
 
     keyboard_buttons = []
 
     if curr_page < total_pages:
         keyboard_buttons.append(
             InlineKeyboardButton(
-                "Next Page", callback_data=NEXT_QUESTIONS_PAGE)
+                "⏭️ " + "صفحه بعدی", callback_data=NEXT_QUESTIONS_PAGE)
         )
 
     if curr_page != 1:
         keyboard_buttons.append(
             InlineKeyboardButton(
-                "Prev Page", callback_data=PREV_QUESTIONS_PAGE),
+                "صفحه قبل" + " ⏮️", callback_data=PREV_QUESTIONS_PAGE),
         )
 
     keyboard = InlineKeyboardMarkup(
@@ -93,9 +93,13 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     questions_template = ""
 
+    questions_template += f"صفحه فعلی <b>{curr_page}#</b>\n\n"
+
     for question in questions:
         questions_template += question_history_template(
             question.question, question.options)
+
+    questions_template += f"صفحه فعلی <b>#{curr_page}</b>\n\n"
 
     ctx.user_data[LAST_QUESTIONS_PAGE_KEY] = curr_page
 
