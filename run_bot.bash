@@ -13,7 +13,7 @@ bot_secret=`cat /run/secrets/bot_secret`
 export DB_URL="postgresql://$db_user:$db_pass@$db_host:$db_port/$db?schema=public"
 export BOT_TOKEN=$bot_token
 export BOT_SECRET=$bot_secret
-export MODE=production
+export MODE=development
 
 prisma generate
 prisma migrate deploy

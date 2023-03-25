@@ -12,13 +12,10 @@ ENV PYTHONFAULTHANDLER 1
 
 RUN pip install pipenv
 
-COPY Pipfile Pipfile.lock
-
-RUN pipenv run pip freeze > requirements.txt
-
-RUN rm -f Pipfile Pipfile.lock
+COPY requirements.txt ./
 
 RUN pip install -r requirements.txt
+
 
 RUN prisma generate
 
