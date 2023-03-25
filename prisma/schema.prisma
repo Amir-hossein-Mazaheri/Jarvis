@@ -17,10 +17,11 @@ model User {
     name                       String
     nickname                   String         @db.VarChar(255)
     student_code               String         @db.VarChar(20)
+    created_at                 DateTime       @default(now())
     correct_answered_questions Question[]     @relation("correct_questions")
     wrong_answered_questions   Question[]     @relation("wrong_questions")
-    created_at                 DateTime       @default(now())
     answered_questions_box     QuestionsBox[]
+    tasks                      Task[]
 }
 
 model Question {
@@ -52,6 +53,17 @@ model QuestionsBox {
     createdAt DateTime   @default(now())
     questions Question[]
     users     User[]
+}
+
+model Task {
+    id        Int      @id @default(autoincrement())
+    job       String
+    weight    Float
+    deadline  DateTime
+    approved  Boolean  @default(false)
+    createdAt DateTime
+    user      User     @relation(fields: [userId], references: [id])
+    userId    Int
 }
 
 enum UserRole {
