@@ -228,7 +228,7 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def show_users_list_buttons(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     message_sender = send_message(update, ctx)
 
-    await message_sender(text="کدوم کاربر رو میخوای هد کنی؟", reply_markup=await get_users_keyboard())
+    await message_sender(text="کدوم کاربر رو میخوای هد کنی؟", reply_markup=await get_users_keyboard(exclude_heads=True))
 
     return AdminStates.ADD_HEAD
 
