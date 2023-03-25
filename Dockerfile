@@ -16,6 +16,8 @@ COPY Pipfile Pipfile.lock
 
 RUN pipenv run pip freeze > requirements.txt
 
+RUN rm -f Pipfile Pipfile.lock
+
 RUN pip install -r requirements.txt
 
 RUN prisma generate
