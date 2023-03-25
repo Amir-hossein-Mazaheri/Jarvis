@@ -198,7 +198,11 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if should_ignore:
         return ConversationHandler.END
 
-    users = await db.user.find_many()
+    users = await db.user.find_many(where={
+        "NOT": {
+            "role": UserRole.ADMIN
+        }
+    })
 
     keyboard = InlineKeyboardMarkup(
         [

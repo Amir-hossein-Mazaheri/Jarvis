@@ -7,14 +7,19 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.constants.commands import BACK_TO_ADMIN_ACTIONS
 
 
-async def get_users_keyboard(data_prefix: str = None):
+async def get_users_keyboard(exclude_heads=False, data_prefix: str = None):
     keyboard = []
 
     users = await db.user.find_many(
         where={
             "NOT": {
-                "role": UserRole.ADMIN
-            }
+                "OR": [
+                    {
+                        "role": UserRole.ADMIN
+                    },
+                    {"role": UserRole.HEAD} if exclude_heads else {}
+                ]
+            },
         }
     )
 
