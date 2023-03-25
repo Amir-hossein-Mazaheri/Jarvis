@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime
 import json
@@ -8,7 +8,7 @@ from src.utils.get_next_question_id import get_next_question_id
 from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
 from src.utils.ignore_user import ignore_user
-from src.utils.get_actions_keyboard import get_actions_keyboard
+from src.utils.get_actions_keyboard import get_actions_keyboard, KeyboardActions
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
 from src.utils.set_timeout import set_timeout
@@ -54,7 +54,7 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         })
 
     if not bool(question_box):
-        await message_sender(text="فعلا آزمونی برای نمایش نداریم", reply_markup=await get_actions_keyboard(update, ctx))
+        await message_sender(text="فعلا آزمونی برای نمایش نداریم", reply_markup=await get_actions_keyboard(update, ctx, [KeyboardActions.QUIZ]))
         return ConversationHandler.END
 
     text = (
@@ -99,8 +99,9 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ctx.user_data[TOTAL_QUESTIONS_KEY] = questions_count
     ctx.user_data[SEEN_QUESTIONS_KEY] = json.dumps([question.id])
 
-    def set_time():
+    async def set_time():
         ctx.user_data[QUESTIONS_TIME_IS_UP] = True
+        await time_is_up(update, ctx)
 
     set_timeout(set_time, question.question_box.duration * 60 * 1000)
 
@@ -113,7 +114,8 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
     if question_time_is_up:
-        return await time_is_up(update, ctx)
+        # return await time_is_up(update, ctx)
+        return ConversationHandler.END
 
     if should_ignore:
         return ConversationHandler.END
@@ -136,9 +138,9 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return QuestionStates.ANSWER_VALIDATOR
 
     if answer.is_answer:
-        wrong_question_count = ctx.user_data.get(CORRECT_QUESTIONS_KEY)
-        ctx.user_data[CORRECT_QUESTIONS_KEY] = wrong_question_count + \
-            1 if wrong_question_count != None else 1
+        correct_question_count = ctx.user_data.get(CORRECT_QUESTIONS_KEY)
+        ctx.user_data[CORRECT_QUESTIONS_KEY] = correct_question_count + \
+            1 if correct_question_count != None else 1
 
         await db.user.update(
             where={
@@ -153,9 +155,9 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             }
         )
     else:
-        wrong_question_count = ctx.user_data.get(CORRECT_QUESTIONS_KEY)
-        ctx.user_data[WRONG_QUESTIONS_KEY] = wrong_question_count + \
-            1 if wrong_question_count != None else 1
+        correct_question_count = ctx.user_data.get(CORRECT_QUESTIONS_KEY)
+        ctx.user_data[WRONG_QUESTIONS_KEY] = correct_question_count + \
+            1 if correct_question_count != None else 1
 
         await db.user.update(
             where={
@@ -225,7 +227,8 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
     if question_time_is_up:
-        return await time_is_up(update, ctx)
+        # return await time_is_up(update, ctx)
+        return ConversationHandler.END
 
     question_id = ctx.user_data.get(QUESTION_ID_KEY)
     seen_questions = json.loads(ctx.user_data.get(SEEN_QUESTIONS_KEY))
