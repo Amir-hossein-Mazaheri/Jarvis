@@ -13,9 +13,11 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
 from src.utils.get_users_keyboard import get_users_keyboard
 from src.utils.is_admin import is_admin
+from src.utils.question_box_validator import question_box_validator
+from src.utils.ignore_none_head import ignore_none_head
 from src.constants.commands import REGISTER_ADMIN
-from src.constants.states import AdminStates
-from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, ADMIN_ADD_HEAD, ADMIN_SHOW_USERS_LIST_BUTTONS
+from src.constants.states import AdminStates, HeadStates
+from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, ADMIN_ADD_HEAD, ADMIN_SHOW_USERS_LIST_BUTTONS, BACK_TO_HEAD_ACTIONS, ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -46,13 +48,18 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return AdminStates.REGISTER_USER_AS_AN_ADMIN
 
     keyboard_buttons.append(
-        InlineKeyboardButton("➕ " + "افزودن آزمون",
-                             callback_data=ADMIN_PROMPT_ADD_QUESTION_BOX)
+        InlineKeyboardButton("❌❓ " + "حذف آزمون",
+                             callback_data=ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE)
     )
 
     keyboard_buttons.append(
-        InlineKeyboardButton("📃 " + "نمایش لیست کاربران",
-                             callback_data=ADMIN_SHOW_USERS_LIST)
+        InlineKeyboardButton("💯 " + "وضعیت آزمون",
+                             callback_data=ADMIN_SHOW_QUESTION_BOXES_FOR_STAT)
+    )
+
+    keyboard_buttons.append(
+        InlineKeyboardButton("➕ " + "افزودن آزمون",
+                             callback_data=ADMIN_PROMPT_ADD_QUESTION_BOX)
     )
 
     keyboard = InlineKeyboardMarkup(
@@ -60,6 +67,9 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             keyboard_buttons,
             [InlineKeyboardButton("🧑‍💼 " + "افزودن هد",
                                   callback_data=ADMIN_SHOW_USERS_LIST_BUTTONS)],
+            [InlineKeyboardButton("📃 " + "نمایش لیست کاربران",
+                                  callback_data=ADMIN_SHOW_USERS_LIST)
+             ],
             [get_back_to_menu_button()]
         ]
     )
@@ -103,92 +113,121 @@ async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return AdminStates.SHOW_ADMIN_ACTIONS
 
 
-async def add_question_box(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_command(update, ctx)
-    message_sender = send_message(update, ctx)
+def add_question_box(for_admin: bool):
+    async def add_question_box_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        user_id = update.effective_user.id
+        should_ignore = await ignore_none_head(update, ctx)
+        message_sender = send_message(update, ctx)
 
-    if should_ignore:
-        return ConversationHandler.END
+        if should_ignore:
+            return ConversationHandler.END
 
-    callback_query = update.callback_query
+        callback_query = update.callback_query
 
-    keyboard = InlineKeyboardMarkup(
-        [
+        keyboard = InlineKeyboardMarkup(
             [
-                InlineKeyboardButton(
-                    "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
-                get_back_to_menu_button()
-            ]
-        ]
-    )
-
-    if callback_query:
-        await message_sender(text="برا من یه فایل json بفرست که مطابق schema درست باشه", reply_markup=keyboard)
-
-        return AdminStates.ADMIN_ACTIONS
-
-    file = await update.message.document.get_file()
-
-    """
-    json that is sent to bot should follow these structures:
-        {
-            "label": str,
-            "duration": int,
-            "deadline": int,
-            "team": one of team enum value,
-            "questions": [
-              {
-                "label": str,
-                "score", int,
-                "options": [
-                    {
-                        "label": str,
-                        "is_answer": bool,
-                    }
+                [
+                    InlineKeyboardButton(
+                        "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS) if for_admin else InlineKeyboardButton(
+                        "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS),
+                    get_back_to_menu_button()
                 ]
-              }
             ]
-        }
+        )
 
-        at least one question with four answers minimum is required
-    """
-    parsed_file = json.loads(await file.download_as_bytearray())
+        if callback_query:
+            await message_sender(text="برا من یه فایل json بفرست که مطابق schema درست باشه", reply_markup=keyboard)
 
-    # deadline is the number of days from now which this line is making that time with timestamp
-    real_deadline = datetime.now(
-    ) + timedelta(days=int(parsed_file["duration"]))
+            if for_admin:
+                return AdminStates.ADMIN_ACTIONS
+            else:
+                return HeadStates.HEAD_ACTION_DECIDER
 
-    question_box = await db.questionsbox.create(
-        data={
-            "label": parsed_file["label"],
-            "duration": int(parsed_file["duration"]),
-            "deadline": real_deadline,
-            "team": parsed_file["team"]
-        }
-    )
-
-    for question in parsed_file["questions"]:
-        await db.question.create(
-            data={
-                "question": question["label"],
-                "score": question["score"],
-                "options": {
-                    "create": list(map(lambda option: {
-                        "label": option["label"],
-                        "is_answer": option["is_answer"]
-                    }, question["options"]))
-                },
-                "question_box": {
-                    "connect": {
-                        "id": question_box.id
-                    }
+        """
+        json that is sent to bot should follow these structures:
+            {
+                "label": str,
+                "duration": int,
+                "deadline": int,
+                "team": one of team enum value,
+                "questions": [
+                {
+                    "label": str,
+                    "score", int,
+                    "options": [
+                        {
+                            "label": str,
+                            "is_answer": bool,
+                        }
+                    ]
                 }
+                ]
+            }
+
+            at least one question with four answers minimum is required
+        """
+        file = await update.message.document.get_file()
+        parsed_file = json.loads(await file.download_as_bytearray())
+
+        if not question_box_validator(parsed_file):
+            await message_sender(text="فایلی که فرستادی از ساختار درست پیروی نمی کرد، مجدد تلاش کن", reply_markup=keyboard)
+
+            if for_admin:
+                return AdminStates.ADMIN_ACTIONS
+            else:
+                return HeadStates.HEAD_ACTION_DECIDER
+
+        # deadline is the number of days from now which this line is making that time with timestamp
+        real_deadline = datetime.now(
+        ) + timedelta(days=int(parsed_file["duration"]))
+
+        team = parsed_file["team"]
+
+        if not for_admin:
+            head = await db.user.find_unique(
+                where={
+                    "tel_id": user_id
+                }
+            )
+
+            team = head.team
+
+        question_box = await db.questionsbox.create(
+            data={
+                "label": parsed_file["label"],
+                "duration": int(parsed_file["duration"]),
+                "deadline": real_deadline,
+                "team": team
             }
         )
 
-    await message_sender(text="نه بابا، آزمونتو ساختی داپش", reply_markup=keyboard, edit=False)
+        for question in parsed_file["questions"]:
+            await db.question.create(
+                data={
+                    "question": question["label"],
+                    "score": question["score"],
+                    "options": {
+                        "create": list(map(lambda option: {
+                            "label": option["label"],
+                            "is_answer": option["is_answer"]
+                        }, question["options"]))
+                    },
+                    "question_box": {
+                        "connect": {
+                            "id": question_box.id
+                        }
+                    }
+                }
+            )
 
-    return AdminStates.SHOW_ADMIN_ACTIONS
+        await message_sender(text="نه بابا، آزمونتو ساختی داپش", reply_markup=keyboard, edit=False)
+
+        if for_admin:
+            return AdminStates.SHOW_ADMIN_ACTIONS
+        else:
+            return HeadStates.HEAD_ACTION_DECIDER
+
+    return add_question_box_action
 
 
 async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
