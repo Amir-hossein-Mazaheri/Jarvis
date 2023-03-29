@@ -33,7 +33,7 @@ model Question {
     w_users         User[]           @relation("correct_questions")
     c_users         User[]           @relation("wrong_questions")
     question_box_id Int?
-    question_box    QuestionsBox?    @relation(fields: [question_box_id], references: [id])
+    question_box    QuestionsBox?    @relation(fields: [question_box_id], references: [id], onDelete: Cascade)
 }
 
 model QuestionOption {
@@ -41,7 +41,7 @@ model QuestionOption {
     label       String    @db.VarChar(255)
     is_answer   Boolean   @default(false)
     question_id Int?
-    question    Question? @relation(fields: [question_id], references: [id])
+    question    Question? @relation(fields: [question_id], references: [id], onDelete: Cascade)
 }
 
 model QuestionsBox {
@@ -59,9 +59,11 @@ model Task {
     id        Int      @id @default(autoincrement())
     job       String
     weight    Float
+    team      Team
     deadline  DateTime
+    markDone  Boolean  @default(false)
     approved  Boolean  @default(false)
-    createdAt DateTime
+    createdAt DateTime @default(now())
     user      User     @relation(fields: [userId], references: [id])
     userId    Int
 }
