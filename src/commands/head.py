@@ -1,7 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime, timedelta
-from pprint import pprint
 import json
 
 from src.utils.db import db
@@ -99,8 +98,6 @@ async def add_task(update: Update, ctx: ContextTypes):
     file = await update.message.document.get_file()
     parsed_file = json.loads(await file.download_as_bytearray())
 
-    pprint(parsed_file)
-
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
@@ -114,34 +111,36 @@ async def add_task(update: Update, ctx: ContextTypes):
 
         return HeadStates.HEAD_ADD_TASK
 
-    for user_info in parsed_file:
-        user = await db.user.find_first(
-            where={
-                "name": "@" + user_info["username"],
-                "team": head.team
-            }
-        )
-
-        if not bool(user):
-            continue
-
-        for task in user_info["tasks"]:
-            deadline = datetime.now() + timedelta(days=int(task["deadline"]))
-
-            await db.task.create(
-                data={
-                    "job": task["job"],
-                    "weight": task["weight"],
-                    "deadline": deadline,
-                    "team": head.team,
-
-                    "user": {
-                        "connect": {
-                            "id": user.id
-                        }
-                    }
+    async with db.batch_() as batcher:
+        for user_info in parsed_file:
+            user = await db.user.find_first(
+                where={
+                    "name": "@" + user_info["username"],
+                    "team": head.team
                 }
             )
+
+            if not bool(user):
+                continue
+
+            for task in user_info["tasks"]:
+                deadline = datetime.now() + \
+                    timedelta(days=int(task["deadline"]))
+
+                await batcher.task.create(
+                    data={
+                        "job": task["job"],
+                        "weight": task["weight"],
+                        "deadline": deadline,
+                        "team": head.team,
+
+                        "user": {
+                            "connect": {
+                                "id": user.id
+                            }
+                        }
+                    }
+                )
 
     await message_sender(text="تسک هایی که می خواستی ساخته شد", reply_markup=keyboard, edit=False)
 

@@ -192,33 +192,34 @@ def add_question_box(for_admin: bool):
 
             team = head.team
 
-        question_box = await db.questionsbox.create(
-            data={
-                "label": parsed_file["label"],
-                "duration": int(parsed_file["duration"]),
-                "deadline": real_deadline,
-                "team": team
-            }
-        )
-
-        for question in parsed_file["questions"]:
-            await db.question.create(
+        async with db.batch_() as batcher:
+            question_box = await batcher.questionsbox.create(
                 data={
-                    "question": question["label"],
-                    "score": question["score"],
-                    "options": {
-                        "create": list(map(lambda option: {
-                            "label": option["label"],
-                            "is_answer": option["is_answer"]
-                        }, question["options"]))
-                    },
-                    "question_box": {
-                        "connect": {
-                            "id": question_box.id
-                        }
-                    }
+                    "label": parsed_file["label"],
+                    "duration": int(parsed_file["duration"]),
+                    "deadline": real_deadline,
+                    "team": team
                 }
             )
+
+            for question in parsed_file["questions"]:
+                await batcher.question.create(
+                    data={
+                        "question": question["label"],
+                        "score": question["score"],
+                        "options": {
+                            "create": list(map(lambda option: {
+                                "label": option["label"],
+                                "is_answer": option["is_answer"]
+                            }, question["options"]))
+                        },
+                        "question_box": {
+                            "connect": {
+                                "id": question_box.id
+                            }
+                        }
+                    }
+                )
 
         await message_sender(text="نه بابا، آزمونتو ساختی داپش", reply_markup=keyboard, edit=False)
 
