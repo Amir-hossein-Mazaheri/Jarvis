@@ -7,18 +7,25 @@ import logging
 
 from src.utils.db import connect_to_db
 from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTIONS, SKIP_QUESTIONS,\
-    QUIT_QUESTIONS, START_QUESTIONS, CANCEL_QUESTIONS, STAT, BACK_TO_STAT, QUESTIONS_HISTORY,\
+    QUIT_QUESTIONS, START_QUESTIONS, STAT, BACK_TO_STAT, QUESTIONS_HISTORY,\
     NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, ADMIN, REGISTER_ADMIN,\
     ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, SHOW_HELP, ADMIN_ADD_HEAD, \
-    ADMIN_SHOW_USERS_LIST_BUTTONS
+    ADMIN_SHOW_USERS_LIST_BUTTONS, TASK, BACK_TO_TASKS_ACTIONS, REMAINING_TASKS, DONE_TASKS, TOTAL_TASKS_SCORE, \
+    TASK_INFORMATION_PREFIX, SUBMIT_TASK_PREFIX, SUBMIT_TASK, HEAD, HEAD_ADD_TASK, BACK_TO_HEAD_ACTIONS,\
+    HEAD_SHOW_MARKED_TASKS, HEAD_APPROVE_TASK, HEAD_REMOVE_TASK, HEAD_SHOW_TASKS_TO_REMOVE, \
+    REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, HEAD_REMOVE_QUESTION_BOX, \
+    ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, HEAD_SHOW_QUESTION_BOXES_FOR_STAT, HEAD_SHOW_QUESTION_BOX_STAT, \
+    GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT
 from src.constants.other import RegisterMode
-from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates, AdminStates
+from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates, AdminStates, TaskStates, HeadStates
 from src.commands.register import start, ask_for_student_code, register_student_code,\
     register_nickname, register_team
 from src.commands.edit import ask_to_edit_what, edit_decider
 from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, show_users_list, add_head, show_users_list_buttons, admin_decider
+from src.commands.task import show_remaining_tasks, show_task_information, show_tasks_actions, show_done_tasks, show_tasks_total_score, mark_task
+from src.commands.head import show_head_actions, prompt_add_task, add_task, show_marked_tasks, approve_task, remove_task, show_tasks_to_remove, show_questions_box_to_remove, remove_question_box, show_question_boxes_for_stat, show_question_box_stat_and_percent
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
 from src.commands.other import questions_history, back_to_menu, show_help, cleaner
 
@@ -117,22 +124,86 @@ def main():
                                             show_users_list, ADMIN_SHOW_USERS_LIST),
                                         CallbackQueryHandler(
                                             back_to_menu, BACK_TO_MENU),
+                                        CallbackQueryHandler(show_questions_box_to_remove(
+                                            for_admin=True), ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE),
+                                        CallbackQueryHandler(remove_question_box(
+                                            for_admin=True), REMOVE_QUESTION_BOX_PREFIX),
                                         CallbackQueryHandler(
                                             show_admin_actions, BACK_TO_ADMIN_ACTIONS),
                                         MessageHandler(
                                             filters.Document.Category(
                                                 'application/json'),
-                                            add_question_box),
+                                            add_question_box(for_admin=True)),
                                         CallbackQueryHandler(
                                             back_to_menu, BACK_TO_MENU),
                                         CallbackQueryHandler(
-                                            add_question_box, ADMIN_PROMPT_ADD_QUESTION_BOX),
+                                            add_question_box(for_admin=True), ADMIN_PROMPT_ADD_QUESTION_BOX),
+                                        CallbackQueryHandler(show_question_boxes_for_stat(
+                                            for_admin=True), ADMIN_SHOW_QUESTION_BOXES_FOR_STAT),
+                                        CallbackQueryHandler(show_question_box_stat_and_percent(
+                                            for_admin=True), GET_QUESTION_BOX_STAT_PREFIX)
                                         ],
             AdminStates.ADMIN_DECIDER: [CallbackQueryHandler(admin_decider)],
             AdminStates.ADD_HEAD: [CallbackQueryHandler(
                 back_to_menu, BACK_TO_MENU), CallbackQueryHandler(add_head)]
         },
         fallbacks=[]
+    )
+
+    task_handler = ConversationHandler(
+        per_chat=True,
+        per_user=True,
+        per_message=True,
+        entry_points=[CallbackQueryHandler(show_tasks_actions, TASK)],
+        states={
+            TaskStates.SHOW_TASKS_ACTIONS: [CallbackQueryHandler(show_tasks_actions, BACK_TO_TASKS_ACTIONS)],
+            TaskStates.TASK_ACTION_DECIDER: [CallbackQueryHandler(show_tasks_actions, BACK_TO_TASKS_ACTIONS),
+                                             CallbackQueryHandler(
+                                                 show_remaining_tasks(TASK_INFORMATION_PREFIX, "این تموم تسک هایی که برات گذاشتن"), REMAINING_TASKS),
+                                             CallbackQueryHandler(
+                                                 show_done_tasks, DONE_TASKS),
+                                             CallbackQueryHandler(
+                                                 show_tasks_total_score, TOTAL_TASKS_SCORE),
+                                             CallbackQueryHandler(
+                                                 show_task_information, TASK_INFORMATION_PREFIX),
+                                             CallbackQueryHandler(
+                                                 mark_task, SUBMIT_TASK_PREFIX),
+                                             CallbackQueryHandler(show_remaining_tasks(
+                                                 SUBMIT_TASK_PREFIX, "تسک هایی که میتونی ثبت کنی", show_marked=True), SUBMIT_TASK),
+                                             ],
+        },
+        fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
+    )
+
+    head_handler = ConversationHandler(
+        entry_points=[CallbackQueryHandler(show_head_actions, HEAD)],
+        states={
+            HeadStates.HEAD_ACTION_DECIDER: [
+                CallbackQueryHandler(add_question_box(
+                    for_admin=False), ADMIN_PROMPT_ADD_QUESTION_BOX),
+                MessageHandler(filters.Document.Category(
+                    "application/json"), add_question_box(for_admin=False)),
+                CallbackQueryHandler(show_questions_box_to_remove(
+                    for_admin=False), HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE),
+                CallbackQueryHandler(remove_question_box(
+                    for_admin=False), REMOVE_QUESTION_BOX_PREFIX),
+                CallbackQueryHandler(prompt_add_task, HEAD_ADD_TASK),
+                CallbackQueryHandler(
+                    show_marked_tasks, HEAD_SHOW_MARKED_TASKS),
+                CallbackQueryHandler(approve_task, HEAD_APPROVE_TASK),
+                CallbackQueryHandler(show_tasks_to_remove,
+                                     HEAD_SHOW_TASKS_TO_REMOVE),
+                CallbackQueryHandler(remove_task, HEAD_REMOVE_TASK),
+                CallbackQueryHandler(
+                    show_question_boxes_for_stat(for_admin=False), HEAD_SHOW_QUESTION_BOXES_FOR_STAT),
+                CallbackQueryHandler(
+                    show_question_box_stat_and_percent(for_admin=False), GET_QUESTION_BOX_STAT_PREFIX)
+            ],
+            HeadStates.HEAD_ADD_TASK: [MessageHandler(
+                filters.Document.Category("application/json"), add_task)]
+        },
+        fallbacks=[CallbackQueryHandler(
+            show_head_actions, BACK_TO_HEAD_ACTIONS), CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
     )
 
     history_handlers = [
@@ -146,6 +217,8 @@ def main():
     show_help_handler = CallbackQueryHandler(show_help, SHOW_HELP)
 
     application.add_handler(start_handler)
+    application.add_handler(task_handler)
+    application.add_handler(head_handler)
     application.add_handler(admin_handler)
     application.add_handler(register_handler)
     application.add_handler(edit_handler)
