@@ -5,7 +5,7 @@ from src.utils.db import db
 from src.utils.question_box_result_template import question_box_result_template
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.send_message import send_message
-from src.constants.other import CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, LAST_MESSAGE_KEY
+from src.constants.other import CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, QUESTION_BOX_ID_KEY
 
 
 async def show_questions_result(update: Update, ctx: ContextTypes.DEFAULT_TYPE, prefix: str = None):

@@ -9,7 +9,6 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
 from src.constants.commands import BACK_TO_STAT
 from src.constants.states import StatStates
-from src.constants.other import LAST_MESSAGE_KEY
 
 
 async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
