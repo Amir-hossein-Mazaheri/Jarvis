@@ -51,7 +51,11 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                     "tel_id": user_id
                 }
             }
-        })
+        },
+        order={
+            "createdAt": "desc"
+        }
+    )
 
     if not bool(question_box):
         await message_sender(text="فعلا آزمونی برای نمایش نداریم", reply_markup=await get_actions_keyboard(update, ctx, [KeyboardActions.QUIZ]))
