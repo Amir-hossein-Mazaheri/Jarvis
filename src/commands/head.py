@@ -311,11 +311,12 @@ def remove_question_box(for_admin: bool):
         await db.questionsbox.delete_many(
             where=where_options)
 
-        await message_sender(text="آزمونی که می خواستی حذف شد", reply_markup=get_head_common_keyboard(
-            prev_menu_callback=HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE,
-            prev_menu_text="❌❓ " + "بازگشت به منوی حذف آزمون",
-            for_admin=for_admin
-        ))
+        await message_sender(text="آزمونی که می خواستی حذف شد",
+                             reply_markup=get_head_common_keyboard(
+                                 prev_menu_callback=HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE,
+                                 prev_menu_text="❌❓ " + "بازگشت به منوی حذف آزمون",
+                                 for_admin=for_admin
+                             ))
 
         if for_admin:
             return AdminStates.ADMIN_ACTIONS
