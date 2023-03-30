@@ -12,6 +12,7 @@ datasource db {
 model User {
     id                         Int            @id @default(autoincrement())
     tel_id                     BigInt         @unique
+    chat_id                    BigInt
     role                       UserRole       @default(STUDENT)
     team                       Team           @default(NO_TEAM)
     name                       String
@@ -64,7 +65,7 @@ model Task {
     markDone  Boolean  @default(false)
     approved  Boolean  @default(false)
     createdAt DateTime @default(now())
-    user      User     @relation(fields: [userId], references: [id])
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId    Int
 }
 
