@@ -1,10 +1,12 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from datetime import datetime
+from persiantools.jdatetime import JalaliDateTime
 
 from src.utils.db import db
 from src.utils.send_message import send_message
 from src.utils.get_head_common_keyboard import get_head_common_keyboard
+from src.utils.get_jalali import get_jalali
 
 
 async def send_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE, for_admin: bool, prefix: str, title: str):
@@ -34,12 +36,10 @@ async def send_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE, fo
     keyboard_buttons = []
 
     for qb in questions_boxes:
-        deadline = datetime.now()
-
         text += (
             f"نام آزمون: {qb.label}\n"
             f"مدت زمان آزمون: {qb.duration}\n"
-            f"ددلاین: {deadline}\n"
+            f"ددلاین: {get_jalali(qb.deadline)}\n"
             f"تیم: {qb.team.replace('_', ' ')}\n"
             "-----------------------------------\n\n"
         )
