@@ -193,31 +193,38 @@ def add_question_box(for_admin: bool):
             team = head.team
 
         async with db.batch_() as batcher:
-            question_box = await batcher.questionsbox.create(
+            question_box = await db.questionsbox.create(
                 data={
                     "label": parsed_file["label"],
                     "duration": int(parsed_file["duration"]),
                     "deadline": real_deadline,
-                    "team": team
+                    "team": team,
                 }
             )
 
-            for question in parsed_file["questions"]:
-                await batcher.question.create(
-                    data={
-                        "question": question["label"],
-                        "score": question["score"],
-                        "options": {
-                            "create": list(map(lambda option: {
-                                "label": option["label"],
-                                "is_answer": option["is_answer"]
-                            }, question["options"]))
-                        },
-                        "question_box": {
-                            "connect": {
-                                "id": question_box.id
+            try:
+                for question in parsed_file["questions"]:
+                    batcher.question.create(
+                        data={
+                            "question": question["label"],
+                            "score": question["score"],
+                            "options": {
+                                "create": list(map(lambda option: {
+                                    "label": option["label"],
+                                    "is_answer": option["is_answer"]
+                                }, question["options"]))
+                            },
+                            "question_box": {
+                                "connect": {
+                                    "id": question_box.id
+                                }
                             }
                         }
+                    )
+            except:
+                await db.questionsbox.delete(
+                    where={
+                        "id": question_box.id
                     }
                 )
 
