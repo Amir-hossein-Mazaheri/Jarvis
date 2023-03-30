@@ -11,6 +11,7 @@ from src.utils.task_validator import task_validator
 from src.utils.ignore_none_admin import ignore_none_admin
 from src.utils.send_question_boxes import send_question_boxes
 from src.utils.get_head_common_keyboard import get_head_common_keyboard
+from src.utils.send_notification import send_notification
 from src.constants.states import HeadStates, AdminStates
 from src.constants.commands import ADMIN_PROMPT_ADD_QUESTION_BOX, HEAD_ADD_TASK,\
     HEAD_APPROVE_TASK, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
@@ -118,7 +119,7 @@ async def add_task(update: Update, ctx: ContextTypes):
                 deadline = datetime.now() + \
                     timedelta(days=int(task["deadline"]))
 
-                await batcher.task.create(
+                batcher.task.create(
                     data={
                         "job": task["job"],
                         "weight": task["weight"],
@@ -173,20 +174,26 @@ async def show_marked_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def approve_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_none_head(update, ctx)
     message_sender = send_message(update, ctx)
+    notification_sender = send_notification(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
 
     task_id = int(update.callback_query.data.split(" ")[1])
 
-    await db.task.update(
+    task = await db.task.update(
         where={
             "id": task_id
         },
         data={
             "approved": True
+        },
+        include={
+            "user": True
         }
     )
+
+    await notification_sender(text=f"عالی، هد تیمت تسک {task.job} رو تایید کن، برو حالشو ببر.", user_id=task.user.tel_id)
 
     await message_sender(text="آفرین، تسکی که می خواستی تایید شد",
                          reply_markup=get_head_common_keyboard(

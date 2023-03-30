@@ -5,9 +5,10 @@ from src.utils.db import db
 from src.utils.get_tasks_keyboard import get_tasks_keyboard
 from src.utils.send_message import send_message
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
+from src.utils.send_notification import send_notification
 from src.constants.states import TaskStates
 from src.constants.commands import REMAINING_TASKS, DONE_TASKS, TOTAL_TASKS_SCORE,\
-    BACK_TO_TASKS_ACTIONS, SUBMIT_TASK, TASK_INFORMATION_PREFIX, SUBMIT_TASK_PREFIX
+    BACK_TO_TASKS_ACTIONS, SUBMIT_TASK
 
 
 async def show_tasks_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -32,12 +33,12 @@ async def show_tasks_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return TaskStates.TASK_ACTION_DECIDER
 
 
-def show_remaining_tasks(prefix: str, text: str, show_marked=False):
+def show_remaining_tasks(prefix: str, text: str, without_mark: bool):
     async def show_remaining_tasks_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
         message_sender = send_message(update, ctx)
 
-        (keyboard, is_there_any_tasks) = await get_tasks_keyboard(user_id, prefix, show_marked)
+        (keyboard, is_there_any_tasks) = await get_tasks_keyboard(user_id, prefix, without_mark)
 
         if is_there_any_tasks:
             await message_sender(text=text, reply_markup=keyboard)
@@ -159,10 +160,12 @@ async def show_tasks_total_score(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
 
 
 async def mark_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     task_id = int(update.callback_query.data.split(" ")[1])
     message_sender = send_message(update, ctx)
+    notification_sender = send_notification(update, ctx)
 
-    await db.task.update(
+    task = await db.task.update(
         where={
             "id": task_id
         },
@@ -171,12 +174,20 @@ async def mark_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
+    user = await db.user.find_unique(
+        where={
+            "tel_id": user_id
+        }
+    )
+
+    await notification_sender(text=f"هد عزیز نوچه {user.nickname} تسک \"{task.job}\" رو مارک کردن برو اگه درسته تاییدش کن", team=user.team)
+
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             "⏮️ " + "بازگشت به منوی تسک ها", callback_data=BACK_TO_TASKS_ACTIONS)],
         [get_back_to_menu_button()]
     ])
 
-    await message_sender(text="خبر، به اطلاع هد تیمت میرسونیم که تسک رو انجام دادی", reply_markup=keyboard)
+    await message_sender(text="عالی، به اطلاع هد تیمت میرسونیم که تسک رو انجام دادی", reply_markup=keyboard)
 
     return TaskStates.TASK_ACTION_DECIDER
