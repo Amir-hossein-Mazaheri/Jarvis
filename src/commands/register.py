@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 from prisma.enums import Team
 
@@ -9,7 +9,7 @@ from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.is_user_registered import is_user_registered
 from src.utils.send_message import send_message
 from src.utils.get_teams_keyboard import get_teams_keyboard
-from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode, IS_USER_REGISTERED
+from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode
 from src.constants.states import RegisterStates, EditStates
 
 
@@ -57,6 +57,7 @@ def register_student_code(mode: RegisterMode):
 
     async def register_student_code_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
+        chat_id = update.effective_chat.id
         name = update.effective_user.name
         student_code = update.message.text
         message_sender = send_message(update, ctx)
@@ -81,13 +82,13 @@ def register_student_code(mode: RegisterMode):
                     "student_code": student_code,
                     "name": name,
                     "nickname": name,
+                    "chat_id": chat_id
                 },
                 "update": {
                     "student_code": student_code
                 }
             }
         )
-        # ctx.user_data[IS_USER_REGISTERED] = "1"
 
         reply_text = ""
         keyboard = None
