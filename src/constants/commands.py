@@ -8,6 +8,7 @@ STAT = "stat"
 ADMIN = "admin"
 HEAD = "head"
 TASK = "get_user_task"
+MENU = 'menu'
 
 ADMIN_PROMPT_ADD_QUESTION_BOX = "admin_prompt_add_question_box"
 ADMIN_SHOW_USERS_LIST = "admin_show_users_list"

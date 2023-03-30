@@ -15,7 +15,7 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     HEAD_SHOW_MARKED_TASKS, HEAD_APPROVE_TASK, HEAD_REMOVE_TASK, HEAD_SHOW_TASKS_TO_REMOVE, \
     REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, HEAD_SHOW_QUESTION_BOXES_FOR_STAT, \
-    GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT
+    GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, MENU
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates, AdminStates, TaskStates, HeadStates
 from src.commands.register import start, ask_for_student_code, register_student_code,\
@@ -47,6 +47,7 @@ def main():
         BOT_TOKEN).post_init(connect_to_db).defaults(defaults).build()
 
     start_handler = CommandHandler(START, start)
+    menu_handler = CommandHandler(MENU, back_to_menu)
 
     register_handler = ConversationHandler(
         per_chat=True,
@@ -159,7 +160,7 @@ def main():
             TaskStates.SHOW_TASKS_ACTIONS: [CallbackQueryHandler(show_tasks_actions, BACK_TO_TASKS_ACTIONS)],
             TaskStates.TASK_ACTION_DECIDER: [CallbackQueryHandler(show_tasks_actions, BACK_TO_TASKS_ACTIONS),
                                              CallbackQueryHandler(
-                                                 show_remaining_tasks(TASK_INFORMATION_PREFIX, "این تموم تسک هایی که برات گذاشتن"), REMAINING_TASKS),
+                                                 show_remaining_tasks(TASK_INFORMATION_PREFIX, "این تموم تسک هایی که برات گذاشتن", without_mark=False), REMAINING_TASKS),
                                              CallbackQueryHandler(
                                                  show_done_tasks, DONE_TASKS),
                                              CallbackQueryHandler(
@@ -169,7 +170,7 @@ def main():
                                              CallbackQueryHandler(
                                                  mark_task, SUBMIT_TASK_PREFIX),
                                              CallbackQueryHandler(show_remaining_tasks(
-                                                 SUBMIT_TASK_PREFIX, "تسک هایی که میتونی ثبت کنی", show_marked=True), SUBMIT_TASK),
+                                                 SUBMIT_TASK_PREFIX, "تسک هایی که میتونی ثبت کنی", without_mark=True), SUBMIT_TASK),
                                              ],
         },
         fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
@@ -217,6 +218,7 @@ def main():
     show_help_handler = CallbackQueryHandler(show_help, SHOW_HELP)
 
     application.add_handler(start_handler)
+    application.add_handler(menu_handler)
     application.add_handler(task_handler)
     application.add_handler(head_handler)
     application.add_handler(admin_handler)
