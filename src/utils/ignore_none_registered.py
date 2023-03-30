@@ -6,7 +6,7 @@ from src.utils.send_message import send_message
 from src.utils.get_actions_keyboard import get_actions_keyboard
 
 
-async def ignore_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def ignore_none_registered(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     is_registered = await is_user_registered(update, ctx)
     message_sender = send_message(update, ctx)
 

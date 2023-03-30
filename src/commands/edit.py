@@ -1,7 +1,7 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 
-from src.utils.ignore_user import ignore_user
+from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.utils.send_message import send_message
@@ -15,7 +15,7 @@ EDIT_ACTIONS = {
 
 
 async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
 
     if should_ignore:

@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime
 
 from src.utils.db import db
-from src.utils.ignore_user import ignore_user
+from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.question_history_template import question_history_template
 from src.utils.get_actions_keyboard import get_actions_keyboard, KeyboardActions
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
@@ -29,7 +29,7 @@ async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
     user_id = update.effective_user.id
     user = await get_user(user_id)

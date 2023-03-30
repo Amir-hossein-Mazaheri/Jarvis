@@ -8,12 +8,13 @@ from src.utils.send_message import send_message
 from src.utils.ignore_none_head import ignore_none_head
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.task_validator import task_validator
-from src.utils.ignore_command import ignore_command
+from src.utils.ignore_none_admin import ignore_none_admin
 from src.utils.send_question_boxes import send_question_boxes
+from src.utils.get_head_common_keyboard import get_head_common_keyboard
 from src.constants.states import HeadStates, AdminStates
 from src.constants.commands import ADMIN_PROMPT_ADD_QUESTION_BOX, HEAD_ADD_TASK,\
-    BACK_TO_HEAD_ACTIONS, HEAD_APPROVE_TASK, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
-    HEAD_REMOVE_TASK, REMOVE_QUESTION_BOX_PREFIX, BACK_TO_ADMIN_ACTIONS, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
+    HEAD_APPROVE_TASK, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
+    HEAD_REMOVE_TASK, REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     GET_QUESTION_BOX_STAT_PREFIX, HEAD_SHOW_QUESTION_BOXES_FOR_STAT
 
 
@@ -35,8 +36,8 @@ async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     questions_box_buttons.reverse()
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("⚒️ " + "افزودن تسک",
-                              callback_data=HEAD_ADD_TASK), InlineKeyboardButton("❌ " + "حذف تسک", callback_data=HEAD_SHOW_TASKS_TO_REMOVE)],
+        [InlineKeyboardButton("❌ " + "حذف تسک", callback_data=HEAD_SHOW_TASKS_TO_REMOVE), InlineKeyboardButton("⚒️ " + "افزودن تسک",
+                                                                                                               callback_data=HEAD_ADD_TASK),],
         questions_box_buttons,
         [InlineKeyboardButton("✅ " + "تایید تسک های تیمت",
                               callback_data=HEAD_SHOW_MARKED_TASKS)],
@@ -55,13 +56,7 @@ async def prompt_add_task(update: Update, ctx: ContextTypes):
     if should_ignore:
         return ConversationHandler.END
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(
-            "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-        [get_back_to_menu_button()]
-    ])
-
-    await message_sender("خب برای من یه فایل json با ساختار مناسب بفرست", reply_markup=keyboard)
+    await message_sender("خب برای من یه فایل json با ساختار مناسب بفرست", reply_markup=get_head_common_keyboard())
 
     return HeadStates.HEAD_ADD_TASK
 
@@ -98,11 +93,7 @@ async def add_task(update: Update, ctx: ContextTypes):
     file = await update.message.document.get_file()
     parsed_file = json.loads(await file.download_as_bytearray())
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(
-            "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-        [get_back_to_menu_button()]
-    ])
+    keyboard = get_head_common_keyboard()
 
     if not task_validator(parsed_file):
         await update.message.delete()
@@ -170,17 +161,11 @@ async def show_marked_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    keyboard_buttons = list(map(lambda t: [InlineKeyboardButton(
-        f"{t.job} - {t.user.name} - {t.user.nickname}", callback_data=f"{HEAD_APPROVE_TASK} {t.id}")], tasks))
-
-    keyboard_buttons.append([
-        InlineKeyboardButton(
-            "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)
-    ])
-
-    keyboard_buttons.append(
-        [get_back_to_menu_button()]
-    )
+    keyboard_buttons = list(
+        map(
+            lambda t: [InlineKeyboardButton(
+                f"{t.job} - {t.user.name} - {t.user.nickname}", callback_data=f"{HEAD_APPROVE_TASK} {t.id}")], tasks
+        )) + get_head_common_keyboard(return_keyboard=False)
 
     await message_sender(text="لیست تسک هایی که بچه های تیمت مارک کردن", reply_markup=InlineKeyboardMarkup(keyboard_buttons))
 
@@ -203,15 +188,11 @@ async def approve_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ " + "بازگشت به منوی تایید تسک",
-                              callback_data=HEAD_SHOW_MARKED_TASKS)],
-        [InlineKeyboardButton(
-            "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-        [get_back_to_menu_button()]
-    ])
-
-    await message_sender(text="آفرین، تسکی که می خواستی تایید شد", reply_markup=keyboard)
+    await message_sender(text="آفرین، تسکی که می خواستی تایید شد",
+                         reply_markup=get_head_common_keyboard(
+                             prev_menu_callback=HEAD_SHOW_MARKED_TASKS,
+                             prev_menu_text="✅ " + "بازگشت به منوی تایید تسک"
+                         ))
 
     return HeadStates.HEAD_ACTION_DECIDER
 
@@ -246,16 +227,10 @@ async def show_tasks_to_remove(update: Update, ctx: ContextTypes):
     )
 
     keyboard_buttons = list(
-        map(lambda t: [InlineKeyboardButton(f"{t.job} - {t.user.name} - {t.user.nickname}", callback_data=f"{HEAD_REMOVE_TASK} {t.id}")], tasks))
-
-    keyboard_buttons.append(
-        [InlineKeyboardButton(
-            "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-    )
-
-    keyboard_buttons.append(
-        [get_back_to_menu_button()]
-    )
+        map(
+            lambda t: [InlineKeyboardButton(f"{t.job} - {t.user.name} - {t.user.nickname}",
+                                            callback_data=f"{HEAD_REMOVE_TASK} {t.id}")], tasks
+        )) + get_head_common_keyboard(return_keyboard=False)
 
     await message_sender(text="لیست تسک هایی که میتونی حذف کنی", reply_markup=InlineKeyboardMarkup(keyboard_buttons))
 
@@ -277,15 +252,10 @@ async def remove_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(
-            "❌ " + "بازگشت به منوی حذف تسک", callback_data=HEAD_SHOW_TASKS_TO_REMOVE)],
-        [InlineKeyboardButton(
-            "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-        [get_back_to_menu_button()]
-    ])
-
-    await message_sender(text="تسکی که می خواستی حذف شد", reply_markup=keyboard)
+    await message_sender(text="تسکی که می خواستی حذف شد", reply_markup=get_head_common_keyboard(
+        prev_menu_callback=HEAD_SHOW_TASKS_TO_REMOVE,
+        prev_menu_text="❌ " + "بازگشت به منوی حذف تسک"
+    ))
 
     return HeadStates.HEAD_ACTION_DECIDER
 
@@ -310,7 +280,7 @@ def show_questions_box_to_remove(for_admin: bool):
 def remove_question_box(for_admin: bool):
     async def remove_question_box_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
-        should_ignore = await ignore_command(update, ctx) if for_admin else await ignore_none_head(update, ctx)
+        should_ignore = await ignore_none_admin(update, ctx) if for_admin else await ignore_none_head(update, ctx)
         message_sender = send_message(update, ctx)
 
         if should_ignore:
@@ -334,16 +304,11 @@ def remove_question_box(for_admin: bool):
         await db.questionsbox.delete_many(
             where=where_options)
 
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton(
-                "❌❓ " + "بازگشت به منوی حذف آزمون", callback_data=HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE)],
-            [InlineKeyboardButton(
-                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS)] if for_admin else [InlineKeyboardButton(
-                    "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-            [get_back_to_menu_button()]
-        ])
-
-        await message_sender(text="آزمونی که می خواستی حذف شد", reply_markup=keyboard)
+        await message_sender(text="آزمونی که می خواستی حذف شد", reply_markup=get_head_common_keyboard(
+            prev_menu_callback=HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE,
+            prev_menu_text="❌❓ " + "بازگشت به منوی حذف آزمون",
+            for_admin=for_admin
+        ))
 
         if for_admin:
             return AdminStates.ADMIN_ACTIONS
@@ -373,7 +338,7 @@ def show_question_boxes_for_stat(for_admin: bool):
 def show_question_box_stat_and_percent(for_admin: bool):
     async def show_question_box_stat_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
-        should_ignore = await ignore_command(update, ctx) if for_admin else await ignore_none_head(update, ctx)
+        should_ignore = await ignore_none_admin(update, ctx) if for_admin else await ignore_none_head(update, ctx)
         message_sender = send_message(update, ctx)
 
         if should_ignore:
@@ -407,15 +372,6 @@ def show_question_box_stat_and_percent(for_admin: bool):
             }
         )
 
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💯 " + "بازگشت به منوی وضعیت آزمون",
-                                  callback_data=HEAD_SHOW_QUESTION_BOXES_FOR_STAT)],
-            [InlineKeyboardButton(
-                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS)] if for_admin else [InlineKeyboardButton(
-                    "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-            [get_back_to_menu_button()]
-        ])
-
         text = f"وضعیت آزمون {question_box.label}\n\n"
 
         for question in question_box.questions:
@@ -434,7 +390,11 @@ def show_question_box_stat_and_percent(for_admin: bool):
                 "---------------------------------------------------------------\n\n"
             )
 
-        await message_sender(text=text, reply_markup=keyboard)
+        await message_sender(text=text, reply_markup=get_head_common_keyboard(
+            prev_menu_callback=HEAD_SHOW_QUESTION_BOXES_FOR_STAT,
+            prev_menu_text="💯 " + "بازگشت به منوی وضعیت آزمون",
+            for_admin=for_admin
+        ))
 
         if for_admin:
             return AdminStates.ADMIN_ACTIONS

@@ -6,8 +6,8 @@ import json
 
 from src.utils.db import db
 from src.utils.is_there_admin import is_there_admin
-from src.utils.ignore_command import ignore_command
-from src.utils.ignore_user import ignore_user
+from src.utils.ignore_none_admin import ignore_none_admin
+from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.show_user import show_user
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
@@ -21,7 +21,7 @@ from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
     is_there_any_admin = await is_there_admin()
     is_user_admin = await is_admin(update, ctx)
     message_sender = send_message(update, ctx)
@@ -34,7 +34,7 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     if is_there_any_admin and (not is_user_admin):
-        await ignore_command(update, ctx)
+        await ignore_none_admin(update, ctx)
         return ConversationHandler.END
 
     keyboard_buttons = []
@@ -80,7 +80,7 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
     is_there_any_admin = await is_there_admin()
     message_sender = send_message(update, ctx)
 
@@ -232,7 +232,7 @@ def add_question_box(for_admin: bool):
 
 
 async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_command(update, ctx)
+    should_ignore = await ignore_none_admin(update, ctx)
     message_sender = send_message(update, ctx)
 
     if should_ignore:

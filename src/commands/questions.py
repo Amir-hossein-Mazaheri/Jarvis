@@ -7,7 +7,7 @@ from src.utils.db import db
 from src.utils.get_next_question_id import get_next_question_id
 from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
-from src.utils.ignore_user import ignore_user
+from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.get_actions_keyboard import get_actions_keyboard, KeyboardActions
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
@@ -23,7 +23,7 @@ async def time_is_up(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
 
     if should_ignore:
@@ -75,7 +75,7 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -113,7 +113,7 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
@@ -193,7 +193,7 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -223,7 +223,7 @@ async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -248,12 +248,12 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
 
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END

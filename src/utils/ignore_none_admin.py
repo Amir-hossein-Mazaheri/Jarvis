@@ -6,7 +6,7 @@ from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.send_message import send_message
 
 
-async def ignore_command(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def ignore_none_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     admin = await is_admin(update, ctx)
     message_sender = send_message(update, ctx)
 

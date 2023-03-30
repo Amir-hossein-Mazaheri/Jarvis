@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.db import db
-from src.utils.ignore_user import ignore_user
+from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.question_box_result_template import question_box_result_template
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
@@ -12,7 +12,7 @@ from src.constants.states import StatStates
 
 
 async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -53,7 +53,7 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
@@ -103,7 +103,7 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
 
 
 async def stat_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_user(update, ctx)
+    should_ignore = await ignore_none_registered(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END

@@ -4,8 +4,7 @@ from datetime import datetime
 
 from src.utils.db import db
 from src.utils.send_message import send_message
-from src.utils.get_back_to_menu_button import get_back_to_menu_button
-from src.constants.commands import BACK_TO_ADMIN_ACTIONS, BACK_TO_HEAD_ACTIONS
+from src.utils.get_head_common_keyboard import get_head_common_keyboard
 
 
 async def send_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE, for_admin: bool, prefix: str, title: str):
@@ -50,15 +49,8 @@ async def send_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE, fo
                 f"{qb.label}", callback_data=f"{prefix} {qb.id}")]
         )
 
-    keyboard_buttons.append(
-        [InlineKeyboardButton(
-            "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS)] if for_admin else [InlineKeyboardButton(
-                "🎛️ " + "بازگشت به منوی کارای هدی", callback_data=BACK_TO_HEAD_ACTIONS)],
-    )
-
-    keyboard_buttons.append(
-        [get_back_to_menu_button()]
-    )
+    keyboard_buttons = keyboard_buttons + \
+        get_head_common_keyboard(return_keyboard=False)
 
     await message_sender(text, reply_markup=InlineKeyboardMarkup(keyboard_buttons))
 
