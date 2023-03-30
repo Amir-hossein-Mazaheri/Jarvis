@@ -1,3 +1,4 @@
+import os
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime
@@ -14,10 +15,11 @@ from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE
 
 
 async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    bot_name = os.getenv("BOT_NAME")
     message_sender = send_message(update, ctx)
 
     text = (
-        "به ربات مدریت اعضای AICup خوش اومدی 👋\n\n"
+        f"به {bot_name} خوش اومدی 👋\n\n"
         "🤖 کارایی که میتونی با این ربات انجام بدی:\n\n"
         "   🔴 جواب به آزمونی که هد تیمت برات گذاشته\n\n"
         "   🔵 دیدن نتایج آرمون هایی که شرکت کردی\n\n"

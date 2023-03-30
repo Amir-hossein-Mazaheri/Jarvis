@@ -1,3 +1,4 @@
+import os
 from telegram import Update, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 from prisma.enums import Team
@@ -14,13 +15,14 @@ from src.constants.states import RegisterStates, EditStates
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    bot_name = os.getenv("BOT_NAME")
     keyboard = await get_actions_keyboard(update, ctx)
     message_sender = send_message(update, ctx)
 
     text = ""
 
     if await is_user_registered(update, ctx):
-        text = "به ربات مدریت اعضای AICup خوش اومدی\n\n"
+        text = f"به {bot_name} خوش اومدی 👋\n\n"
     else:
         text = (
             "به ربات مدریت اعضای AICup خوش اومدی\n\n"
