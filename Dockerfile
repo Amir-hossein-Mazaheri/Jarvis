@@ -6,17 +6,17 @@ ENV LANG C.UTF-8
 
 ENV LC_ALL C.UTF-8
 
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-ENV PYTHONFAULTHANDLER 1
+ENV PYTHONFAULTHANDLER=1
 
 RUN pip install pipenv
 
-COPY requirements.txt ./
+COPY Pipfile Pipfile.lock ./
+
+RUN pip freeze > requirements.txt 
 
 RUN pip install -r requirements.txt
-
-RUN pip install schema
 
 RUN prisma generate
 
