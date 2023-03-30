@@ -193,7 +193,7 @@ async def approve_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    await notification_sender(text=f"عالی، هد تیمت تسک {task.job} رو تایید کن، برو حالشو ببر.", user_id=task.user.tel_id)
+    await notification_sender(text=f"عالی، هد تیمت تسک \"{task.job}\" رو تایید کرد، برو حالشو ببر.", user_id=task.user.tel_id)
 
     await message_sender(text="آفرین، تسکی که می خواستی تایید شد",
                          reply_markup=get_head_common_keyboard(

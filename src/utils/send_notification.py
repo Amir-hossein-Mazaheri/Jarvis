@@ -29,6 +29,9 @@ def send_notification(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                             'role': UserRole.HEAD
                         }
                     ]
+                },
+                order={
+                    'created_at': 'asc'
                 }
             )
 

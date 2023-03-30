@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 from telegram.ext import ApplicationBuilder, Defaults
 from telegram.constants import ParseMode
@@ -9,8 +8,6 @@ from src.utils.setup import setup
 
 # loads .env content into env variables
 load_dotenv()
-
-sys.dont_write_bytecode = True
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)

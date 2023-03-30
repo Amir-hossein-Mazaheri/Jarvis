@@ -50,7 +50,7 @@ async def send_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE, fo
         )
 
     keyboard_buttons = keyboard_buttons + \
-        get_head_common_keyboard(return_keyboard=False)
+        get_head_common_keyboard(return_keyboard=False, for_admin=for_admin)
 
     await message_sender(text, reply_markup=InlineKeyboardMarkup(keyboard_buttons))
 
