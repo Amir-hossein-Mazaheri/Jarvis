@@ -97,7 +97,7 @@ def register_student_code(mode: RegisterMode):
             reply_text = "حالا تیمی که توشی رو انتخاب کن، این مرحله رو با دقت انجام بده"
             keyboard = get_teams_keyboard()
         else:
-            reply_text = "عالیه، تیمیت تغییر کرد"
+            reply_text = "عالیه، شماره دانشجوییت تغییر کرد"
             keyboard = await get_actions_keyboard(update, ctx)
 
         await message_sender(text=reply_text, reply_markup=keyboard)
@@ -140,14 +140,14 @@ def register_team(mode: RegisterMode):
         reply_text = ""
 
         if mode == RegisterMode.CREATE:
-            reply_text = "حالا اسم مستعاری که می خوای داشته باشی رو هم برام بفرست (اگه نمی خوای کنسل رو بزن)"
+            reply_text = "حالا اسمتم بهم بگو"
             keyboard = InlineKeyboardMarkup(
                 [
                     [get_back_to_menu_button("❌ " + "کنسل")]
                 ]
             )
         else:
-            reply_text = "عالیه، شماره دانشجوییت تغییر کرد"
+            reply_text = "عالیه، تیمیت تغییر کرد"
             keyboard = await get_actions_keyboard(update, ctx)
 
         await message_sender(text=reply_text, reply_markup=keyboard)
@@ -182,7 +182,7 @@ def register_nickname(mode: RegisterMode):
         if mode == RegisterMode.CREATE:
             reply_text = "خب، ثبت نامت تموم شد حالا میتونی از امکانات ربات استفاده کنی"
         else:
-            reply_text = "عالیه، اسم مستعارت تغییر کرد"
+            reply_text = "عالیه، اسمت تغییر کرد"
 
         await message_sender(text=reply_text, reply_markup=await get_actions_keyboard(update, ctx))
 

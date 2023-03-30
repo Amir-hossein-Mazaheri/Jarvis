@@ -9,7 +9,7 @@ from src.constants.states import EditStates
 
 EDIT_ACTIONS = {
     "student_code": "🧑‍💻 " + "شماره دانشجویی",
-    "nickname": "📛 " + "اسم مستعار",
+    "nickname": "📛 " + "اسم",
     "team": "🧑‍🤝‍🧑 " + "تیم"
 }
 
@@ -41,7 +41,7 @@ async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     message_sender = send_message(update, ctx)
 
     if action == EDIT_ACTIONS["nickname"]:
-        await message_sender(text="حالا اسم مستعار جدیدت رو بگو بهم")
+        await message_sender(text="حالا اسم جدیدت رو بگو بهم")
         return EditStates.EDIT_NICKNAME
     elif action == EDIT_ACTIONS["student_code"]:
         await message_sender(text="حالا شماره دانشجویی جدیدت رو بهم بگو")
