@@ -247,16 +247,25 @@ async def show_tasks_to_remove(update: Update, ctx: ContextTypes):
 async def remove_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_none_head(update, ctx)
     message_sender = send_message(update, ctx)
+    notification_sender = send_notification(update, ctx)
 
     if should_ignore:
         return ConversationHandler.END
 
     task_id = int(update.callback_query.data.split(" ")[1])
 
-    await db.task.delete(
+    task = await db.task.delete(
         where={
             "id": task_id
+        },
+        include={
+            "user": True
         }
+    )
+
+    await notification_sender(
+        text=f"کاربر عزیز هد تیمت تسک \"{task.job}\" رو برات حذف کرد برو حالشو ببر.",
+        user_id=task.user.tel_id
     )
 
     await message_sender(text="تسکی که می خواستی حذف شد", reply_markup=get_head_common_keyboard(
