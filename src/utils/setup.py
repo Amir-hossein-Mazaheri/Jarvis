@@ -12,7 +12,8 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     HEAD_SHOW_MARKED_TASKS, HEAD_APPROVE_TASK, HEAD_REMOVE_TASK, HEAD_SHOW_TASKS_TO_REMOVE, \
     REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, HEAD_SHOW_QUESTION_BOXES_FOR_STAT, \
-    GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, MENU
+    GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, MENU, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, \
+    REMOVE_HEAD_PREFIX, ADD_HEAD_PREFIX, ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, REMOVE_USER_PREFIX
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -22,7 +23,8 @@ from src.commands.edit import ask_to_edit_what, edit_decider
 from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, \
-    show_users_list, add_head, show_users_list_buttons, admin_decider
+    show_users_list, add_head, show_users_list_buttons, show_heads_list_to_remove,\
+    remove_head, remove_user
 from src.commands.other import questions_history, back_to_menu, show_help, cleaner
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
 from src.commands.head import show_head_actions, prompt_add_task, add_task, show_marked_tasks, approve_task, remove_task, show_tasks_to_remove, show_questions_box_to_remove, remove_question_box, show_question_boxes_for_stat, show_question_box_stat_and_percent
@@ -106,14 +108,12 @@ async def setup(
         entry_points=[CallbackQueryHandler(
             show_admin_actions, ADMIN), CommandHandler(ADMIN, show_admin_actions)],
         states={
-            AdminStates.SHOW_ADMIN_ACTIONS: [CallbackQueryHandler(back_to_menu, BACK_TO_MENU), CallbackQueryHandler(show_admin_actions, BACK_TO_ADMIN_ACTIONS)],
+            AdminStates.SHOW_ADMIN_ACTIONS: [CallbackQueryHandler(show_admin_actions, BACK_TO_ADMIN_ACTIONS)],
             AdminStates.REGISTER_USER_AS_AN_ADMIN: [
                 CallbackQueryHandler(register_admin, REGISTER_ADMIN)],
-            AdminStates.ADMIN_ACTIONS: [CallbackQueryHandler(show_users_list_buttons, ADMIN_SHOW_USERS_LIST_BUTTONS),
+            AdminStates.ADMIN_ACTIONS: [CallbackQueryHandler(show_users_list_buttons(ADD_HEAD_PREFIX, "هد"), ADMIN_SHOW_USERS_LIST_BUTTONS),
                                         CallbackQueryHandler(
                                             show_users_list, ADMIN_SHOW_USERS_LIST),
-                                        CallbackQueryHandler(
-                                            back_to_menu, BACK_TO_MENU),
                                         CallbackQueryHandler(show_questions_box_to_remove(
                                             for_admin=True), ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE),
                                         CallbackQueryHandler(remove_question_box(
@@ -125,19 +125,24 @@ async def setup(
                                                 'application/json'),
                                             add_question_box(for_admin=True)),
                                         CallbackQueryHandler(
-                                            back_to_menu, BACK_TO_MENU),
-                                        CallbackQueryHandler(
                                             add_question_box(for_admin=True), ADMIN_PROMPT_ADD_QUESTION_BOX),
                                         CallbackQueryHandler(show_question_boxes_for_stat(
                                             for_admin=True), ADMIN_SHOW_QUESTION_BOXES_FOR_STAT),
                                         CallbackQueryHandler(show_question_box_stat_and_percent(
-                                            for_admin=True), GET_QUESTION_BOX_STAT_PREFIX)
+                                            for_admin=True), GET_QUESTION_BOX_STAT_PREFIX),
+                                        CallbackQueryHandler(
+                                            show_heads_list_to_remove, ADMIN_SHOW_HEADS_LIST_TO_REMOVE),
+                                        CallbackQueryHandler(
+                                            remove_head, REMOVE_HEAD_PREFIX),
+                                        CallbackQueryHandler(
+                                            show_users_list_buttons(REMOVE_USER_PREFIX, "کاربر"), ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE),
+                                        CallbackQueryHandler(
+                                            remove_user, REMOVE_USER_PREFIX),
+                                        CallbackQueryHandler(
+                                            add_head, ADD_HEAD_PREFIX)
                                         ],
-            AdminStates.ADMIN_DECIDER: [CallbackQueryHandler(admin_decider)],
-            AdminStates.ADD_HEAD: [CallbackQueryHandler(
-                back_to_menu, BACK_TO_MENU), CallbackQueryHandler(add_head)]
         },
-        fallbacks=[]
+        fallbacks=[CallbackQueryHandler(back_to_menu, BACK_TO_MENU)]
     )
 
     task_handler = ConversationHandler(

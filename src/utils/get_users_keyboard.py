@@ -7,7 +7,7 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.constants.commands import BACK_TO_ADMIN_ACTIONS
 
 
-async def get_users_keyboard(exclude_heads=False, data_prefix: str = None):
+async def get_users_keyboard(exclude_heads=False, prefix: str = None):
     keyboard = []
 
     users = await db.user.find_many(
@@ -24,12 +24,8 @@ async def get_users_keyboard(exclude_heads=False, data_prefix: str = None):
     )
 
     for i, user in enumerate(users):
-        callback_data = f"{data_prefix}~~~" if data_prefix else ""
-
-        callback_data += str(user.id)
-
         keyboard.append([InlineKeyboardButton(show_user(
-            user.nickname, user.student_code, user.role, i, ignore_trailing_dashes=True), callback_data=callback_data)])
+            user.nickname, user.student_code, user.role, i, ignore_trailing_dashes=True), callback_data=f"{prefix} {user.id}")])
 
     keyboard.append(
         [

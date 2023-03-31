@@ -17,7 +17,11 @@ from src.utils.question_box_validator import question_box_validator
 from src.utils.ignore_none_head import ignore_none_head
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates, HeadStates
-from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS, ADMIN_PROMPT_ADD_QUESTION_BOX, ADMIN_ADD_HEAD, ADMIN_SHOW_USERS_LIST_BUTTONS, BACK_TO_HEAD_ACTIONS, ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT
+from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,\
+    ADMIN_PROMPT_ADD_QUESTION_BOX, ADMIN_SHOW_USERS_LIST_BUTTONS,\
+    BACK_TO_HEAD_ACTIONS, ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, \
+    ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, REMOVE_HEAD_PREFIX, \
+    ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -65,9 +69,14 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup(
         [
             keyboard_buttons,
-            [InlineKeyboardButton("🧑‍💼 " + "افزودن هد",
-                                  callback_data=ADMIN_SHOW_USERS_LIST_BUTTONS)],
-            [InlineKeyboardButton("📃 " + "نمایش لیست کاربران",
+            [InlineKeyboardButton("❌🧑‍💼 " + "عزل هد",
+                                  callback_data=ADMIN_SHOW_HEADS_LIST_TO_REMOVE),
+             InlineKeyboardButton("🧑‍💼 " + "افزودن هد",
+                                  callback_data=ADMIN_SHOW_USERS_LIST_BUTTONS)
+             ],
+            [InlineKeyboardButton("❌👤 " + "حذف کاربر",
+                                  callback_data=ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE),
+             InlineKeyboardButton("📃 " + "نمایش لیست کاربران",
                                   callback_data=ADMIN_SHOW_USERS_LIST)
              ],
             [get_back_to_menu_button()]
@@ -272,21 +281,28 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return AdminStates.ADMIN_ACTIONS
 
 
-async def show_users_list_buttons(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    message_sender = send_message(update, ctx)
+def show_users_list_buttons(prefix: str, action: str):
+    async def show_users_list_buttons_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        should_ignore = await ignore_none_admin(update, ctx)
+        message_sender = send_message(update, ctx)
 
-    await message_sender(text="کدوم کاربر رو میخوای هد کنی؟", reply_markup=await get_users_keyboard(exclude_heads=True))
+        if should_ignore:
+            return ConversationHandler.END
 
-    return AdminStates.ADD_HEAD
+        await message_sender(text=f"کدوم کاربر رو میخوای {action} کنی؟", reply_markup=await get_users_keyboard(exclude_heads=True, prefix=prefix))
 
+        return AdminStates.ADMIN_ACTIONS
 
-async def admin_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    return AdminStates.ADD_HEAD
+    return show_users_list_buttons_actions
 
 
 async def add_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = int(update.callback_query.data)
+    user_id = int(update.callback_query.data.split(" ")[1])
+    should_ignore = await ignore_none_admin(update, ctx)
     message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
 
     await db.user.update(
         where={
@@ -309,3 +325,102 @@ async def add_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await message_sender(text="خب این یارو رو هد کردی، ماشالا", reply_markup=keyboard)
 
     return AdminStates.SHOW_ADMIN_ACTIONS
+
+
+async def show_heads_list_to_remove(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_admin(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    users = await db.user.find_many(
+        where={
+            "role": UserRole.HEAD,
+        },
+        order={
+            "created_at": "desc"
+        }
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        [*list(map(
+            lambda user: [
+                InlineKeyboardButton(
+                    text=f"{user.student_code} -- {user.nickname} -- {user.team.replace('_', ' ')}", callback_data=f"{REMOVE_HEAD_PREFIX} {user.id}")
+            ], users)),
+         [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]]
+    )
+
+    await message_sender(text="لیست هد هایی که میتونی عزل کنی", reply_markup=keyboard)
+
+    return AdminStates.ADMIN_ACTIONS
+
+
+async def remove_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_admin(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    head_id = int(update.callback_query.data.split(" ")[1])
+
+    await db.user.update(
+        where={
+            "id": head_id
+        },
+        data={
+            "role": UserRole.STUDENT
+        }
+    )
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("بازگشت به لیست عزل هد",
+                              callback_data=ADMIN_SHOW_HEADS_LIST_TO_REMOVE)],
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    await message_sender(text="این یارو رو عزل کردی 😞", reply_markup=keyboard)
+
+    return AdminStates.ADMIN_ACTIONS
+
+
+async def remove_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_admin(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    user_id = int(update.callback_query.data.split(" ")[1])
+
+    await db.user.delete(
+        where={
+            "id": user_id
+        }
+    )
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("بازگشت به لیست حذف کاربر",
+                              callback_data=ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE)],
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    await message_sender(text="کاربر بدبخت رو حذفش کردی 🫠", reply_markup=keyboard)
+
+    return AdminStates.ADMIN_ACTIONS
