@@ -1,11 +1,14 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
+from datetime import datetime, timezone
+import pytz
 
 from src.utils.db import db
 from src.utils.get_tasks_keyboard import get_tasks_keyboard
 from src.utils.send_message import send_message
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_notification import send_notification
+from src.utils.get_jalali import get_jalali
 from src.constants.states import TaskStates
 from src.constants.commands import REMAINING_TASKS, DONE_TASKS, TOTAL_TASKS_SCORE,\
     BACK_TO_TASKS_ACTIONS, SUBMIT_TASK
@@ -65,7 +68,9 @@ async def show_task_information(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    left_days = 0
+    left_days = (task.deadline.replace(
+        tzinfo=pytz.utc) - datetime.now(tz=pytz.utc)).days
+    print(left_days)
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
@@ -77,7 +82,8 @@ async def show_task_information(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "جزییات تسک \n\n"
         f"کارایی که باید انجام بدی: {task.job}\n\n"
         f"وزن کار: {task.weight}\n\n"
-        f"مهلت باقی مونده: {left_days}\n\n"
+        f"مهلت باقی مونده: {left_days} روز\n\n"
+        f"تاریخ ددلاین: {get_jalali(task.deadline)}\n\n"
     )
 
     await message_sender(text=text, reply_markup=keyboard)
