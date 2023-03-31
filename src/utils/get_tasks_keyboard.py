@@ -19,7 +19,8 @@ async def get_tasks_keyboard(user_id: int, prefix: str, without_marked: bool):
         }
     }
 
-    where_options["markDone"] = not without_marked
+    if without_marked:
+        where_options["markDone"] = False
 
     tasks = await db.task.find_many(
         where=where_options
