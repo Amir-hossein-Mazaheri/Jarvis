@@ -53,15 +53,17 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         elif data == PREV_QUESTIONS_PAGE:
             curr_page -= 1
 
+    where_options = {
+        "question_box": {
+            "deadline": {
+                "lte": datetime.now()
+            },
+            "team": user.team
+        }
+    }
+
     questions = await db.question.find_many(
-        where={
-            "question_box": {
-                "deadline": {
-                    "lte": datetime.now()
-                },
-                "team": user.team
-            }
-        },
+        where=where_options,
         take=QUESTIONS_PER_PAGE,
         skip=(curr_page - 1) * QUESTIONS_PER_PAGE,
         include={
@@ -72,7 +74,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if len(questions) == 0:
         return await message_sender(text="فعلا سوالی نداریم", reply_markup=await get_actions_keyboard(update, ctx, [KeyboardActions.HISTORY]))
 
-    questions_count = await db.question.count()
+    questions_count = await db.question.count(where=where_options)
 
     total_pages = (questions_count // QUESTIONS_PER_PAGE) + 1
 
