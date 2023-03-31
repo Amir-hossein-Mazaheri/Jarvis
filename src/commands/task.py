@@ -186,7 +186,7 @@ async def mark_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    await notification_sender(text=f"هد عزیز نوچه {user.nickname} تسک \"{task.job}\" رو مارک کردن برو اگه درسته تاییدش کن", team=user.team)
+    await notification_sender(text=f"هد عزیز نوچه {user.nickname} تسک \"{task.job}\" رو مارک کردن برو اگه درسته تاییدش کن", team=task.team)
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
