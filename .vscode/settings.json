@@ -4,6 +4,7 @@
         "jdatetime",
         "levelname",
         "persiantools",
+        "pytz",
         "questionsbox"
     ]
 }

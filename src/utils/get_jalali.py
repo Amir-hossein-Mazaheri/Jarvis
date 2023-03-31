@@ -6,4 +6,4 @@ def get_jalali(datetime: datetime):
     date = datetime.fromtimestamp(datetime.timestamp())
 
     return JalaliDateTime(date).strftime(
-        "%Y / %m / %d - %H:%M", locale="fa_IR")
+        "%H:%M - %Y/%m/%d ", locale="fa_IR")
