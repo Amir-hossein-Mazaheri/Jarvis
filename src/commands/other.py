@@ -1,4 +1,5 @@
 import os
+import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime
@@ -125,6 +126,8 @@ async def cleaner(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def error_handler(update: object, ctx: ContextTypes.DEFAULT_TYPE):
+    logging.error(ctx.error)
+
     if isinstance(update, Update):
         message_sender = send_message(update, ctx)
 

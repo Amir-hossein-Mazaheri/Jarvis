@@ -14,15 +14,17 @@ from src.utils.send_message import send_message
 from src.utils.set_timeout import set_timeout
 from src.utils.get_user import get_user
 from src.constants.states import QuestionStates
-from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY, WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY, QUESTIONS_TIME_IS_UP
-from src.constants.commands import START_QUESTIONS
+from src.constants.other import QUESTION_ID_KEY, NEXT_QUESTION_ID_KEY, CORRECT_QUESTIONS_KEY,\
+    WRONG_QUESTIONS_KEY, TOTAL_QUESTIONS_KEY, SEEN_QUESTIONS_KEY, QUESTION_BOX_ID_KEY,\
+    QUESTIONS_TIME_IS_UP
+from src.constants.commands import START_QUESTIONS, QUESTION_BOX_PREP_PHASE_PREFIX, QUESTIONS
 
 
 async def time_is_up(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return await show_questions_result(update, ctx, "زمان آزمونت تموم شده\n\n")
 
 
-async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def show_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
 
@@ -31,16 +33,9 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    keyboard = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton("🚀 " + "شروع", callback_data=START_QUESTIONS),
-             get_back_to_menu_button("❌ " + "بازگشت")]
-        ]
-    )
-
     user = await get_user(user_id)
 
-    question_box = await db.questionsbox.find_first(
+    question_boxes = await db.questionsbox.find_many(
         where={
             "deadline": {
                 "gte": datetime.now(),
@@ -57,9 +52,44 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    if not bool(question_box):
+    keyboard = InlineKeyboardMarkup(
+        [*list(map(lambda qb: [InlineKeyboardButton(qb.label,
+               callback_data=f"{QUESTION_BOX_PREP_PHASE_PREFIX} {qb.id}")], question_boxes)),
+         [get_back_to_menu_button()]]
+    )
+
+    if len(question_boxes) == 0:
         await message_sender(text="فعلا آزمونی برای نمایش نداریم", reply_markup=await get_actions_keyboard(update, ctx, [KeyboardActions.QUIZ]))
         return ConversationHandler.END
+
+    await message_sender(text="لیست آزمون هایی که داری", reply_markup=keyboard)
+
+    return QuestionStates.PREP_PHASE
+
+
+async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_registered(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    questions_box_id = int(update.callback_query.data.split(" ")[1])
+
+    keyboard = InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("🚀 " + "شروع", callback_data=START_QUESTIONS),
+             get_back_to_menu_button("❌ " + "بازگشت")],
+            [InlineKeyboardButton("بازگشت به لیست آزمون ها",
+                                  callback_data=QUESTIONS)]
+        ]
+    )
+
+    question_box = await db.questionsbox.find_unique(
+        where={
+            "id": questions_box_id
+        }
+    )
 
     text = (
         f"آزمون {question_box.label}\n\n"
