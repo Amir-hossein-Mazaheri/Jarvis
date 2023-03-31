@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes
-from datetime import datetime, timezone
+from telegram.ext import ContextTypes, ConversationHandler
+from datetime import datetime
 import pytz
 
 from src.utils.db import db
@@ -9,13 +9,18 @@ from src.utils.send_message import send_message
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_notification import send_notification
 from src.utils.get_jalali import get_jalali
+from src.utils.ignore_none_registered import ignore_none_registered
 from src.constants.states import TaskStates
 from src.constants.commands import REMAINING_TASKS, DONE_TASKS, TOTAL_TASKS_SCORE,\
     BACK_TO_TASKS_ACTIONS, SUBMIT_TASK
 
 
 async def show_tasks_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
 
     keyboard = InlineKeyboardMarkup(
         [
@@ -39,7 +44,11 @@ async def show_tasks_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 def show_remaining_tasks(prefix: str, text: str, without_mark: bool):
     async def show_remaining_tasks_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
+        should_ignore = await ignore_none_registered(update, ctx)
         message_sender = send_message(update, ctx)
+
+        if should_ignore:
+            return ConversationHandler.END
 
         (keyboard, is_there_any_tasks) = await get_tasks_keyboard(user_id, prefix, without_mark)
 
@@ -60,7 +69,11 @@ def show_remaining_tasks(prefix: str, text: str, without_mark: bool):
 async def show_task_information(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     # the first element is the constant prefix but the second element is the task id
     task_id = int(update.callback_query.data.split(" ")[1])
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
 
     task = await db.task.find_unique(
         where={
@@ -93,7 +106,11 @@ async def show_task_information(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def show_done_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
 
     tasks = await db.task.find_many(
         where={
@@ -130,7 +147,11 @@ async def show_done_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def show_tasks_total_score(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
 
     # this way put pressure on code
     # TODO: change this to aggregation for calculating total score
@@ -168,8 +189,12 @@ async def show_tasks_total_score(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
 async def mark_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     task_id = int(update.callback_query.data.split(" ")[1])
+    should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
     notification_sender = send_notification(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
 
     task = await db.task.update(
         where={
