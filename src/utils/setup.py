@@ -1,4 +1,4 @@
-from typing import Union
+
 from telegram.ext import CommandHandler, ConversationHandler, MessageHandler,\
     filters, CallbackQueryHandler, Application, JobQueue, ExtBot
 
@@ -13,7 +13,8 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, HEAD_SHOW_QUESTION_BOXES_FOR_STAT, \
     GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, MENU, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, \
-    REMOVE_HEAD_PREFIX, ADD_HEAD_PREFIX, ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, REMOVE_USER_PREFIX
+    REMOVE_HEAD_PREFIX, ADD_HEAD_PREFIX, ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, REMOVE_USER_PREFIX,\
+    QUESTION_BOX_PREP_PHASE_PREFIX
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -21,7 +22,7 @@ from src.commands.register import start, ask_for_student_code, register_student_
     register_nickname, register_team
 from src.commands.edit import ask_to_edit_what, edit_decider
 from src.commands.questions import send_questions, answer_validator,\
-    skip_question, quit_questions, prep_phase
+    skip_question, quit_questions, prep_phase, show_question_boxes
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, \
     show_users_list, add_head, show_users_list_buttons, show_heads_list_to_remove,\
     remove_head, remove_user
@@ -75,9 +76,11 @@ async def setup(
         per_message=True,
         per_chat=True,
         per_user=True,
-        entry_points=[CallbackQueryHandler(prep_phase, QUESTIONS)],
+        entry_points=[CallbackQueryHandler(show_question_boxes, QUESTIONS)],
         states={
-            QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS), CallbackQueryHandler(back_to_menu, BACK_TO_MENU)],
+            QuestionStates.PREP_PHASE: [CallbackQueryHandler(prep_phase, QUESTION_BOX_PREP_PHASE_PREFIX)],
+            QuestionStates.SHOW_QUESTIONS: [CallbackQueryHandler(send_questions, START_QUESTIONS),
+                                            CallbackQueryHandler(show_question_boxes, QUESTIONS)],
             QuestionStates.ANSWER_VALIDATOR: [CallbackQueryHandler(skip_question, SKIP_QUESTIONS),
                                               CallbackQueryHandler(
                                                   quit_questions, QUIT_QUESTIONS),
