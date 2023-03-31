@@ -14,7 +14,11 @@ RUN pip install pipenv
 
 COPY Pipfile Pipfile.lock ./
 
-RUN pip freeze > requirements.txt 
+RUN pipenv install
+
+RUN pipenv run pip freeze > requirements.txt
+
+RUN rm -rf Pipfile Pipfile.lock
 
 RUN pip install -r requirements.txt
 
@@ -23,5 +27,7 @@ RUN prisma generate
 COPY ./ ./
 
 RUN chmod +x run_bot.bash
+
+ENV BOT_NAME=Jarvis
 
 CMD [ "./run_bot.bash" ]

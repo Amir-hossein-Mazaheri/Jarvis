@@ -15,6 +15,7 @@ export BOT_TOKEN=$bot_token
 export BOT_SECRET=$bot_secret
 export MODE=development
 
+prisma generate
 prisma migrate deploy
 
 python main.py
