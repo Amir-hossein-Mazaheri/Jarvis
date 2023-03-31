@@ -10,7 +10,7 @@ from src.utils.get_actions_keyboard import get_actions_keyboard, KeyboardActions
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
 from src.utils.get_user import get_user
-from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE
+from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, START
 from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE
 
 
@@ -122,3 +122,10 @@ async def back_to_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def cleaner(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.delete()
+
+
+async def error_handler(update: object, ctx: ContextTypes.DEFAULT_TYPE):
+    if isinstance(update, Update):
+        message_sender = send_message(update, ctx)
+
+        await message_sender(text=f"متاسفانه مشکلی پیش اومده، اگه با /{START} درست نشد بهمون پیام بده تا مشکل رو رفع کنم")

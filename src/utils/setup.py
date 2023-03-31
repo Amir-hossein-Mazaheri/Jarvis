@@ -25,7 +25,7 @@ from src.commands.questions import send_questions, answer_validator,\
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, \
     show_users_list, add_head, show_users_list_buttons, show_heads_list_to_remove,\
     remove_head, remove_user
-from src.commands.other import questions_history, back_to_menu, show_help, cleaner
+from src.commands.other import questions_history, back_to_menu, show_help, cleaner, error_handler
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
 from src.commands.head import show_head_actions, prompt_add_task, add_task, show_marked_tasks, approve_task, remove_task, show_tasks_to_remove, show_questions_box_to_remove, remove_question_box, show_question_boxes_for_stat, show_question_box_stat_and_percent
 from src.commands.task import show_remaining_tasks, show_task_information, show_tasks_actions, show_done_tasks, show_tasks_total_score, mark_task
@@ -226,6 +226,8 @@ async def setup(
         filters.ALL & (~filters.COMMAND), cleaner))
 
     application.add_handlers(history_handlers)
+
+    application.add_error_handler(error_handler)
 
     commands = [
         ("start", "استارت ربات و نمایش منوی ربات")
