@@ -17,8 +17,7 @@ program_mode = os.getenv("MODE")
 
 
 def main():
-    defaults = Defaults(parse_mode=ParseMode.HTML,
-                        block=False, disable_notification=True)
+    defaults = Defaults(parse_mode=ParseMode.HTML)
 
     application = ApplicationBuilder().token(
         BOT_TOKEN).post_init(setup).defaults(defaults).build()
