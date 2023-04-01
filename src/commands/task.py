@@ -81,9 +81,20 @@ async def show_task_information(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    left_days = (task.deadline.replace(
-        tzinfo=pytz.utc) - datetime.now(tz=pytz.utc)).days
-    print(left_days)
+    time_delta = (task.deadline.replace(
+        tzinfo=pytz.utc) - datetime.now(tz=pytz.utc))
+    left_days = time_delta.days
+    left_hours = time_delta.seconds // 3600
+
+    left_time = ""
+
+    if left_days > 0:
+        left_time += f"{left_days} روز"
+
+    if left_hours > 0:
+        if left_days > 0:
+            left_time += " و "
+        left_time += f"{left_hours} ساعت"
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
@@ -95,7 +106,7 @@ async def show_task_information(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "جزییات تسک \n\n"
         f"کارایی که باید انجام بدی: {task.job}\n\n"
         f"وزن کار: {task.weight}\n\n"
-        f"مهلت باقی مونده: {left_days} روز\n\n"
+        f"مهلت باقی مونده: {left_time}\n\n"
         f"تاریخ ددلاین: {get_jalali(task.deadline)}\n\n"
     )
 
