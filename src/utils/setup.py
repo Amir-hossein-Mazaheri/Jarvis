@@ -1,4 +1,3 @@
-
 from telegram.ext import CommandHandler, ConversationHandler, MessageHandler,\
     filters, CallbackQueryHandler, Application, JobQueue, ExtBot
 
@@ -174,6 +173,8 @@ async def setup(
     )
 
     head_handler = ConversationHandler(
+        per_chat=True,
+        per_user=True,
         entry_points=[CallbackQueryHandler(show_head_actions, HEAD)],
         states={
             HeadStates.HEAD_ACTION_DECIDER: [
@@ -237,3 +238,5 @@ async def setup(
     ]
 
     await application.bot.set_my_commands(commands)
+
+    # application.drop_chat_data(application.bot.get_bot().)

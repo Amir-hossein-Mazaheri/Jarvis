@@ -20,6 +20,8 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     keyboard = await get_actions_keyboard(update, ctx)
     message_sender = send_message(update, ctx)
 
+    ctx._application.drop_chat_data(update.effective_chat.id)
+
     text = ""
 
     if await is_user_registered(update, ctx):
