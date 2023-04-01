@@ -238,5 +238,3 @@ async def setup(
     ]
 
     await application.bot.set_my_commands(commands)
-
-    # application.drop_chat_data(application.bot.get_bot().)
