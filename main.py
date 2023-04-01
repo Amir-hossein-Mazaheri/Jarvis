@@ -25,12 +25,12 @@ def main():
 
     if program_mode.lower() == 'production':
         application.run_webhook(
-            listen="",
+            listen="0.0.0.0",
             port=8443,
             secret_token=os.getenv("BOT_SECRET"),
             key="private.key",
             cert="cert.pem",
-            webhook_url="https://amirhossein-mazaheri.ir:8443"
+            webhook_url=os.getenv("SERVER_IP")
         )
     else:
         application.run_polling()

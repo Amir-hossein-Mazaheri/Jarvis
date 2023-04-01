@@ -10,6 +10,7 @@ services:
       - db_pass
       - bot_token
       - bot_secret
+      - server_ip
   db:
     image: postgres:15.1-alpine
     restart: always
@@ -39,3 +40,5 @@ secrets:
     file: ./bot_token.txt
   bot_secret:
     file: ./bot_secret.txt
+  server_ip:
+    file: ./server_ip.txt

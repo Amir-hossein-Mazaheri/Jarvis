@@ -30,4 +30,6 @@ RUN chmod +x run_bot.bash
 
 ENV BOT_NAME=Jarvis
 
+ENV MODE=production
+
 CMD [ "./run_bot.bash" ]
