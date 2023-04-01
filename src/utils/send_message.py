@@ -1,5 +1,7 @@
+import logging
 from telegram import Update
 from telegram.ext import ContextTypes
+from telegram.error import BadRequest
 
 from src.constants.other import LAST_MESSAGE_KEY
 
@@ -17,14 +19,17 @@ def send_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     async def send_message(text: str, reply_markup=None, edit=True):
         sent_message = None
 
-        if edit:
-            if last_message_id:
-                sent_message = await ctx.bot.edit_message_text(message_id=last_message_id, chat_id=chat_id, text=text, reply_markup=reply_markup)
+        try:
+            if edit:
+                if last_message_id:
+                    sent_message = await ctx.bot.edit_message_text(message_id=last_message_id, chat_id=chat_id, text=text, reply_markup=reply_markup)
+                else:
+                    sent_message = await ctx.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
             else:
                 sent_message = await ctx.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
-        else:
-            sent_message = await ctx.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
 
-        ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+            ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
+        except BadRequest as ex:
+            logging.error(ex.message)
 
     return send_message
