@@ -5,9 +5,4 @@ conversation.py
 quiz.py
 __pycache__
 /*.json
-db.txt
-db_user.txt
-db_pass.txt
-bot_secret.txt
-bot_token.txt
-requirements.txt
+/*.txt
