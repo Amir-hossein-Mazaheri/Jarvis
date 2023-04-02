@@ -155,7 +155,7 @@ async def show_marked_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         where={
             "team": head.team,
             "approved": False,
-            "markDone": True,
+            "mark_done": True,
         },
         include={
             "user": True
@@ -221,7 +221,7 @@ async def show_tasks_to_remove(update: Update, ctx: ContextTypes):
     tasks = await db.task.find_many(
         where={
             "team": head.team,
-            "markDone": False,
+            "mark_done": False,
             "approved": False,
 
             "deadline": {

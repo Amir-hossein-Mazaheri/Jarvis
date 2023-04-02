@@ -131,7 +131,7 @@ async def show_done_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             }
         },
         order={
-            "createdAt": "desc"
+            "created_at": "desc"
         }
     )
 
@@ -212,7 +212,7 @@ async def mark_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "id": task_id
         },
         data={
-            "markDone": True
+            "mark_done": True
         }
     )
 

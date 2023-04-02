@@ -46,27 +46,27 @@ model QuestionOption {
 }
 
 model QuestionsBox {
-    id        Int        @id @default(autoincrement())
-    label     String     @db.VarChar(255)
-    team      Team
-    duration  Int
-    deadline  DateTime
-    createdAt DateTime   @default(now())
-    questions Question[]
-    users     User[]
+    id         Int        @id @default(autoincrement())
+    label      String     @db.VarChar(255)
+    team       Team
+    duration   Int
+    deadline   DateTime
+    created_at DateTime   @default(now())
+    questions  Question[]
+    users      User[]
 }
 
 model Task {
-    id        Int      @id @default(autoincrement())
-    job       String
-    weight    Float
-    team      Team
-    deadline  DateTime
-    markDone  Boolean  @default(false)
-    approved  Boolean  @default(false)
-    createdAt DateTime @default(now())
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId    Int
+    id         Int      @id @default(autoincrement())
+    job        String
+    weight     Float
+    team       Team
+    deadline   DateTime
+    mark_done  Boolean  @default(false)
+    approved   Boolean  @default(false)
+    created_at DateTime @default(now())
+    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId     Int
 }
 
 enum UserRole {
