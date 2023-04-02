@@ -154,7 +154,7 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if should_ignore:
         return ConversationHandler.END
 
-    answer_id = int(update.callback_query.data)
+    answer_id = int(update.callback_query.data.split(" ")[1])
 
     user_id = update.effective_user.id
     question_id = ctx.user_data.get(QUESTION_ID_KEY)
@@ -261,7 +261,6 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
     if question_time_is_up:
-        # return await time_is_up(update, ctx)
         return ConversationHandler.END
 
     question_id = ctx.user_data.get(QUESTION_ID_KEY)

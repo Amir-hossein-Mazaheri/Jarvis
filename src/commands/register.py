@@ -13,6 +13,7 @@ from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.utils.get_user import get_user
 from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode
 from src.constants.states import RegisterStates, EditStates
+from src.constants.commands import REGISTER_TEAM_PREFIX, EDIT_TEAM_PREFIX
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -100,7 +101,7 @@ def register_student_code(mode: RegisterMode):
 
         if mode == RegisterMode.CREATE:
             reply_text = "حالا تیمی که توشی رو انتخاب کن، این مرحله رو با دقت انجام بده"
-            keyboard = get_teams_keyboard()
+            keyboard = get_teams_keyboard(REGISTER_TEAM_PREFIX)
         else:
             reply_text = "عالیه، شماره دانشجوییت تغییر کرد"
             keyboard = await get_actions_keyboard(update, ctx)
@@ -119,7 +120,7 @@ def register_team(mode: RegisterMode):
     async def register_team_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
         message_sender = send_message(update, ctx)
-        callback_team = update.callback_query.data
+        callback_team = update.callback_query.data.split(" ")[1]
         user = await get_user(user_id)
 
         if user.role == UserRole.HEAD:

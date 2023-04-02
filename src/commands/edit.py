@@ -6,6 +6,7 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.utils.send_message import send_message
 from src.constants.states import EditStates
+from src.constants.commands import EDIT_TEAM_PREFIX
 
 EDIT_ACTIONS = {
     "student_code": "🧑‍💻 " + "شماره دانشجویی",
@@ -47,7 +48,7 @@ async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await message_sender(text="حالا شماره دانشجویی جدیدت رو بهم بگو")
         return EditStates.EDIT_STUDENT_CODE
     elif action == EDIT_ACTIONS["team"]:
-        await message_sender(text="تیمی که رفتی توش رو انتخاب کن", reply_markup=get_teams_keyboard())
+        await message_sender(text="تیمی که رفتی توش رو انتخاب کن", reply_markup=get_teams_keyboard(EDIT_TEAM_PREFIX))
         return EditStates.EDIT_TEAM
 
     await message_sender(text="عملیات نادرست")

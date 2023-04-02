@@ -14,8 +14,8 @@ from src.utils.get_head_common_keyboard import get_head_common_keyboard
 from src.utils.send_notification import send_notification
 from src.constants.states import HeadStates, AdminStates
 from src.constants.commands import ADMIN_PROMPT_ADD_QUESTION_BOX, HEAD_ADD_TASK,\
-    HEAD_APPROVE_TASK, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
-    HEAD_REMOVE_TASK, REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
+    HEAD_APPROVE_TASK_PREFIX, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
+    HEAD_REMOVE_TASK_PREFIX, REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     GET_QUESTION_BOX_STAT_PREFIX, HEAD_SHOW_QUESTION_BOXES_FOR_STAT
 
 
@@ -165,7 +165,7 @@ async def show_marked_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     keyboard_buttons = list(
         map(
             lambda t: [InlineKeyboardButton(
-                f"{t.job} - {t.user.name} - {t.user.nickname}", callback_data=f"{HEAD_APPROVE_TASK} {t.id}")], tasks
+                f"{t.job} - {t.user.name} - {t.user.nickname}", callback_data=f"{HEAD_APPROVE_TASK_PREFIX} {t.id}")], tasks
         )) + get_head_common_keyboard(return_keyboard=False)
 
     await message_sender(text="لیست تسک هایی که بچه های تیمت مارک کردن", reply_markup=InlineKeyboardMarkup(keyboard_buttons))
@@ -236,7 +236,7 @@ async def show_tasks_to_remove(update: Update, ctx: ContextTypes):
     keyboard_buttons = list(
         map(
             lambda t: [InlineKeyboardButton(f"{t.job} - {t.user.name} - {t.user.nickname}",
-                                            callback_data=f"{HEAD_REMOVE_TASK} {t.id}")], tasks
+                                            callback_data=f"{HEAD_REMOVE_TASK_PREFIX} {t.id}")], tasks
         )) + get_head_common_keyboard(return_keyboard=False)
 
     await message_sender(text="لیست تسک هایی که میتونی حذف کنی", reply_markup=InlineKeyboardMarkup(keyboard_buttons))

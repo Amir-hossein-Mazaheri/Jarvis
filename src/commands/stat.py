@@ -7,7 +7,7 @@ from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.question_box_result_template import question_box_result_template
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
-from src.constants.commands import BACK_TO_STAT
+from src.constants.commands import BACK_TO_STAT, SHOW_QUESTION_BOX_STAT_PREFIX
 from src.constants.states import StatStates
 
 
@@ -41,7 +41,7 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ]
 
     keyboard_buttons.extend(list(map(lambda qb: [InlineKeyboardButton(
-        qb.label, callback_data=qb.id)], question_boxes)))
+        qb.label, callback_data=f"{SHOW_QUESTION_BOX_STAT_PREFIX} {qb.id}")], question_boxes)))
 
     keyboard = InlineKeyboardMarkup(
         keyboard_buttons
@@ -58,7 +58,7 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
     if should_ignore:
         return ConversationHandler.END
 
-    question_box_id = int(update.callback_query.data)
+    question_box_id = int(update.callback_query.data.split(" ")[1])
     user_id = update.effective_user.id
     message_sender = send_message(update, ctx)
 
