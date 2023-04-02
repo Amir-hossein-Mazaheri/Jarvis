@@ -41,11 +41,15 @@ async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     action = update.callback_query.data
     message_sender = send_message(update, ctx)
 
+    keyboard = InlineKeyboardMarkup(
+        [[get_back_to_menu_button()]]
+    )
+
     if action == EDIT_ACTIONS["nickname"]:
-        await message_sender(text="حالا اسم جدیدت رو بگو بهم")
+        await message_sender(text="حالا اسم جدیدت رو بگو بهم", reply_markup=keyboard)
         return EditStates.EDIT_NICKNAME
     elif action == EDIT_ACTIONS["student_code"]:
-        await message_sender(text="حالا شماره دانشجویی جدیدت رو بهم بگو")
+        await message_sender(text="حالا شماره دانشجویی جدیدت رو بهم بگو", reply_markup=keyboard)
         return EditStates.EDIT_STUDENT_CODE
     elif action == EDIT_ACTIONS["team"]:
         await message_sender(text="تیمی که رفتی توش رو انتخاب کن", reply_markup=get_teams_keyboard(EDIT_TEAM_PREFIX))
