@@ -1,7 +1,7 @@
 from prisma.enums import UserRole
 
 
-def show_user(nickname: str, student_code: str, role: UserRole, counter: int = None, ignore_trailing_dashes=False):
+def show_user(name: str, nickname: str, student_code: str, role: UserRole, counter: int = None, ignore_trailing_dashes=False):
     user = ""
 
     persian_role = ""
@@ -16,7 +16,7 @@ def show_user(nickname: str, student_code: str, role: UserRole, counter: int = N
     if counter:
         user += f"#{counter} "
 
-    user += f"{nickname} --- {student_code} --- {persian_role}"
+    user += f"{nickname} --- {student_code} --- {persian_role} -- {name}"
 
     if not ignore_trailing_dashes:
         user += "\n\n--------------------------------------------------------\n\n"

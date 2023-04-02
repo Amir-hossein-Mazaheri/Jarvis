@@ -15,7 +15,7 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, MENU, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, \
     REMOVE_HEAD_PREFIX, ADD_HEAD_PREFIX, ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, REMOVE_USER_PREFIX,\
     QUESTION_BOX_PREP_PHASE_PREFIX, REGISTER_TEAM_PREFIX, EDIT_TEAM_PREFIX, ANSWER_VALIDATOR_PREFIX,\
-    SHOW_QUESTION_BOX_STAT_PREFIX
+    SHOW_QUESTION_BOX_STAT_PREFIX, HEAD_SEE_USERS_LIST
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -29,7 +29,10 @@ from src.commands.admin import show_admin_actions, register_admin, add_question_
     remove_head, remove_user
 from src.commands.other import questions_history, back_to_menu, show_help, cleaner, error_handler
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
-from src.commands.head import show_head_actions, prompt_add_task, add_task, show_marked_tasks, approve_task, remove_task, show_tasks_to_remove, show_questions_box_to_remove, remove_question_box, show_question_boxes_for_stat, show_question_box_stat_and_percent
+from src.commands.head import show_head_actions, prompt_add_task, add_task,\
+    show_marked_tasks, approve_task, remove_task, show_tasks_to_remove,\
+    show_questions_box_to_remove, remove_question_box, show_question_boxes_for_stat,\
+    show_question_box_stat_and_percent, see_team_users_list
 from src.commands.task import show_remaining_tasks, show_task_information, show_tasks_actions, show_done_tasks, show_tasks_total_score, mark_task
 
 
@@ -221,7 +224,9 @@ async def setup(
                 CallbackQueryHandler(
                     show_question_boxes_for_stat(for_admin=False), exact_matcher(HEAD_SHOW_QUESTION_BOXES_FOR_STAT)),
                 CallbackQueryHandler(
-                    show_question_box_stat_and_percent(for_admin=False), GET_QUESTION_BOX_STAT_PREFIX)
+                    show_question_box_stat_and_percent(for_admin=False), GET_QUESTION_BOX_STAT_PREFIX),
+                CallbackQueryHandler(see_team_users_list,
+                                     exact_matcher(HEAD_SEE_USERS_LIST))
             ],
             HeadStates.HEAD_ADD_TASK: [MessageHandler(
                 filters.Document.Category("application/json"), add_task)]

@@ -25,7 +25,7 @@ async def get_users_keyboard(exclude_heads=False, prefix: str = None):
 
     for i, user in enumerate(users):
         keyboard.append([InlineKeyboardButton(show_user(
-            user.nickname, user.student_code, user.role, i, ignore_trailing_dashes=True), callback_data=f"{prefix} {user.id}")])
+            user.name, user.nickname, user.student_code, user.role, i, ignore_trailing_dashes=True), callback_data=f"{prefix} {user.id}")])
 
     keyboard.append(
         [

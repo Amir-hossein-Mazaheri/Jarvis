@@ -12,11 +12,13 @@ from src.utils.ignore_none_admin import ignore_none_admin
 from src.utils.send_question_boxes import send_question_boxes
 from src.utils.get_head_common_keyboard import get_head_common_keyboard
 from src.utils.send_notification import send_notification
+from src.utils.get_user import get_user
+from src.utils.show_user import show_user
 from src.constants.states import HeadStates, AdminStates
 from src.constants.commands import ADMIN_PROMPT_ADD_QUESTION_BOX, HEAD_ADD_TASK,\
     HEAD_APPROVE_TASK_PREFIX, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
     HEAD_REMOVE_TASK_PREFIX, REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
-    GET_QUESTION_BOX_STAT_PREFIX, HEAD_SHOW_QUESTION_BOXES_FOR_STAT
+    GET_QUESTION_BOX_STAT_PREFIX, HEAD_SHOW_QUESTION_BOXES_FOR_STAT, HEAD_SEE_USERS_LIST
 
 
 async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -37,8 +39,10 @@ async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     questions_box_buttons.reverse()
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("❌ " + "حذف تسک", callback_data=HEAD_SHOW_TASKS_TO_REMOVE), InlineKeyboardButton("⚒️ " + "افزودن تسک",
-                                                                                                               callback_data=HEAD_ADD_TASK),],
+        [InlineKeyboardButton("🧑‍🤝‍🧑 " + "اعضای تیمت",
+                              callback_data=HEAD_SEE_USERS_LIST)],
+        [InlineKeyboardButton("❌ " + "حذف تسک", callback_data=HEAD_SHOW_TASKS_TO_REMOVE),
+         InlineKeyboardButton("⚒️ " + "افزودن تسک", callback_data=HEAD_ADD_TASK),],
         questions_box_buttons,
         [InlineKeyboardButton("✅ " + "تایید تسک های تیمت",
                               callback_data=HEAD_SHOW_MARKED_TASKS)],
@@ -395,15 +399,15 @@ def show_question_box_stat_and_percent(for_admin: bool):
             correct_answers = len(question.c_users)
             wrong_answers = len(question.w_users)
             total_answers = correct_answers + wrong_answers
-            correct_answers_percent = (
-                correct_answers / total_answers) * 100 if total_answers > 0 else "نا معلوم"
-            wrong_answers_percent = (
-                wrong_answers / total_answers) * 100 if total_answers > 0 else "نا معلوم"
+            correct_answers_percent = str((
+                correct_answers / total_answers) * 100) + "%" if total_answers > 0 else "نا معلوم"
+            wrong_answers_percent = str((
+                wrong_answers / total_answers) * 100) + "%" if total_answers > 0 else "نا معلوم"
 
             text += (
                 f"سوال {question.question}\n"
-                f"درصد افرادی که درست جواب دادند: {correct_answers_percent}%\n"
-                f"درصد افرادی که غلط جواب دادند: {wrong_answers_percent}%\n\n"
+                f"درصد افرادی که درست جواب دادند: {correct_answers_percent}\n"
+                f"درصد افرادی که غلط جواب دادند: {wrong_answers_percent}\n\n"
                 "---------------------------------------------------------------\n\n"
             )
 
@@ -419,3 +423,30 @@ def show_question_box_stat_and_percent(for_admin: bool):
             return HeadStates.HEAD_ACTION_DECIDER
 
     return show_question_box_stat_action
+
+
+async def see_team_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    should_ignore = await ignore_none_head(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    head = await get_user(user_id)
+
+    team_members = await db.user.find_many(
+        where={
+            "team": head.team
+        }
+    )
+
+    team_members_template = ""
+
+    for i, user in enumerate(team_members):
+        team_members_template += show_user(user.name, user.nickname, user.student_code,
+                                           user.role, i + 1)
+
+    await message_sender(text=team_members_template, reply_markup=get_head_common_keyboard())
+
+    return HeadStates.HEAD_ACTION_DECIDER

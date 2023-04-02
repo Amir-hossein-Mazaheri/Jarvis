@@ -24,6 +24,7 @@ HEAD_SHOW_MARKED_TASKS = "show_marked_tasks"
 HEAD_SHOW_TASKS_TO_REMOVE = "head_show_tasks_to_remove"
 HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE = "head_show_questions_box_to_remove"
 HEAD_SHOW_QUESTION_BOXES_FOR_STAT = "head_show_question_boxes_for_stat"
+HEAD_SEE_USERS_LIST = "head_see_users_list"
 
 BACK_TO_ADMIN_ACTIONS = "back_to_admin_actions"
 BACK_TO_TASKS_ACTIONS = "back_to_tasks_actions"

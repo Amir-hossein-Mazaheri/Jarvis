@@ -273,7 +273,7 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     users_template = ""
 
     for i, user in enumerate(users):
-        users_template += show_user(user.nickname, user.student_code,
+        users_template += show_user(user.name, user.nickname, user.student_code,
                                     user.role, i + 1)
 
     await message_sender(text=users_template, reply_markup=keyboard)
