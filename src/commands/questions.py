@@ -35,12 +35,14 @@ async def show_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     user = await get_user(user_id)
 
+    OR = list(map(lambda t: {"team": t}, user.secondary_teams))
+
     question_boxes = await db.questionsbox.find_many(
         where={
             "deadline": {
                 "gte": datetime.now(),
             },
-            "team": user.team,
+            "OR": OR,
             "users": {
                 "none": {
                     "tel_id": user_id
@@ -148,7 +150,6 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
     if question_time_is_up:
-        # return await time_is_up(update, ctx)
         return ConversationHandler.END
 
     if should_ignore:

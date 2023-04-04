@@ -1,5 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
+from prisma.enums import Team, UserRole
 from datetime import datetime, timedelta
 import json
 
@@ -14,11 +15,14 @@ from src.utils.get_head_common_keyboard import get_head_common_keyboard
 from src.utils.send_notification import send_notification
 from src.utils.get_user import get_user
 from src.utils.show_user import show_user
+from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.constants.states import HeadStates, AdminStates
 from src.constants.commands import ADMIN_PROMPT_ADD_QUESTION_BOX, HEAD_ADD_TASK,\
     HEAD_APPROVE_TASK_PREFIX, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
     HEAD_REMOVE_TASK_PREFIX, REMOVE_QUESTION_BOX_PREFIX, HEAD_SHOW_QUESTIONS_BOX_TO_REMOVE, \
-    GET_QUESTION_BOX_STAT_PREFIX, HEAD_SHOW_QUESTION_BOXES_FOR_STAT, HEAD_SEE_USERS_LIST
+    GET_QUESTION_BOX_STAT_PREFIX, HEAD_SHOW_QUESTION_BOXES_FOR_STAT, HEAD_SEE_USERS_LIST,\
+    HEAD_ADD_USER_FROM_OTHER_TEAMS, HEAD_REMOVE_USER_FROM_TEAM, HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX,\
+    HEAD_REMOVE_TEAM_MEMBER_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX
 
 
 async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -46,6 +50,8 @@ async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         questions_box_buttons,
         [InlineKeyboardButton("✅ " + "تایید تسک های تیمت",
                               callback_data=HEAD_SHOW_MARKED_TASKS)],
+        [InlineKeyboardButton("❌👤 " + "حذف عضو از تیم", callback_data=HEAD_REMOVE_USER_FROM_TEAM),
+         InlineKeyboardButton("➕ " + "افزودن کاربر از تیم های دیگه", callback_data=HEAD_ADD_USER_FROM_OTHER_TEAMS)],
         [get_back_to_menu_button()]
     ])
 
@@ -112,7 +118,16 @@ async def add_task(update: Update, ctx: ContextTypes):
             user = await db.user.find_first(
                 where={
                     "name": "@" + user_info["username"],
-                    "team": head.team
+                    "OR": [
+                        {
+                            "team": head.team
+                        },
+                        {
+                            "secondary_teams": {
+                                "has": head.team
+                            }
+                        }
+                    ]
                 }
             )
 
@@ -437,7 +452,16 @@ async def see_team_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     team_members = await db.user.find_many(
         where={
-            "team": head.team
+            "OR": [
+                {
+                    "team": head.team
+                },
+                {
+                    "secondary_teams": {
+                        "has": head.team
+                    }
+                }
+            ]
         }
     )
 
@@ -448,5 +472,188 @@ async def see_team_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                                            user.role, i + 1)
 
     await message_sender(text=team_members_template, reply_markup=get_head_common_keyboard())
+
+    return HeadStates.HEAD_ACTION_DECIDER
+
+
+async def show_teams_to_add_team_member(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_head(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    keyboard = InlineKeyboardMarkup(
+        get_teams_keyboard(
+            HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX, return_keyboard=False, include_cancel_button=False) +
+        get_head_common_keyboard(return_keyboard=False))
+
+    await message_sender(text="از کدوم تیم می خوای اضافه کنی؟", reply_markup=keyboard)
+
+    return HeadStates.HEAD_ACTION_DECIDER
+
+
+async def show_users_to_add_member_from_other_team(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_head(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    callback_team = update.callback_query.data.split(" ")[1]
+    target_team = None
+
+    for team in Team:
+        if callback_team == team.value:
+            target_team = team.value
+            break
+
+    users = await db.user.find_many(
+        where={
+            "OR": [
+                {
+                    "team": target_team
+                },
+                {
+                    "secondary_teams": {
+                        "has": target_team
+                    }
+                }
+            ]
+        }
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        list(map(lambda u: [InlineKeyboardButton(show_user(
+            u.name, u.nickname, u.student_code, u.role, ignore_trailing_dashes=True), callback_data=f"{HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX} {u.id}")], users)) +
+        get_head_common_keyboard(
+            prev_menu_callback=HEAD_ADD_USER_FROM_OTHER_TEAMS,
+            prev_menu_text="بازگشت به منوی افزودن از تیم های دیگه",
+            return_keyboard=False
+        )
+    )
+
+    await message_sender(text="خب حالا کدوم کاربر از این تیمی که انتخاب کردی رو می خوای وارد تیمت کنی؟", reply_markup=keyboard)
+
+    return HeadStates.HEAD_ACTION_DECIDER
+
+
+async def add_team_member_from_other_teams(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    should_ignore = await ignore_none_head(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    memeber_id = int(update.callback_query.data.split(" ")[1])
+
+    head = await get_user(user_id)
+
+    await db.user.update(
+        where={
+            "id": memeber_id
+        },
+        data={
+            "secondary_teams": {
+                "push": head.team
+            }
+        }
+    )
+
+    keyboard = get_head_common_keyboard(
+        prev_menu_callback=HEAD_ADD_USER_FROM_OTHER_TEAMS,
+        prev_menu_text="بازگشت به منوی افزودن از تیم های دیگه"
+    )
+
+    await message_sender(text="کاربری که می خواستی به تیمت اضافه شد", reply_markup=keyboard)
+
+    return HeadStates.HEAD_ACTION_DECIDER
+
+
+async def show_users_list_to_remove_from_team(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    should_ignore = await ignore_none_head(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    head = await get_user(user_id)
+
+    users = await db.user.find_many(
+        where={
+            "OR": [
+                {
+                    "team": head.team
+                },
+                {
+                    "secondary_teams": {
+                        "has": head.team
+                    }
+                }
+            ],
+            "NOT": {
+                "OR": [
+                   {
+                       "role": UserRole.ADMIN
+                   },
+                    {
+                       "role": UserRole.HEAD
+                   }
+                ]
+            }
+        }
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        list(map(lambda u: [InlineKeyboardButton(show_user(
+            u.name, u.nickname, u.student_code, u.role, ignore_trailing_dashes=True), callback_data=f"{HEAD_REMOVE_TEAM_MEMBER_PREFIX} {u.tel_id}")], users)) +
+        get_head_common_keyboard(return_keyboard=False)
+    )
+
+    await message_sender(text="کدوم یکی از اعضای تیمت رو می خوای حذف کنی؟", reply_markup=keyboard)
+
+    return HeadStates.HEAD_ACTION_DECIDER
+
+
+async def remove_team_member(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    should_ignore = await ignore_none_head(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    member_id = int(update.callback_query.data.split(" ")[1])
+
+    head = await get_user(user_id)
+    member = await get_user(member_id)
+
+    if member.team == head.team:
+        await db.user.update(
+            where={
+                "id": member_id
+            },
+            data={
+                "team": Team.NO_TEAM
+            }
+        )
+    else:
+        secondary_teams = member.secondary_teams.copy()
+        secondary_teams.remove(head.team)
+
+        await db.user.update(
+            where={
+                "tel_id": member_id
+            },
+            data={
+                "secondary_teams": {
+                    "set": secondary_teams
+                }
+            }
+        )
+
+    await message_sender(text="کاربر از تیمت حذف شد", reply_markup=get_head_common_keyboard())
 
     return HeadStates.HEAD_ACTION_DECIDER

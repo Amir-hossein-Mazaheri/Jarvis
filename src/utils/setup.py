@@ -15,7 +15,9 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     GET_QUESTION_BOX_STAT_PREFIX, ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, MENU, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, \
     REMOVE_HEAD_PREFIX, ADD_HEAD_PREFIX, ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, REMOVE_USER_PREFIX,\
     QUESTION_BOX_PREP_PHASE_PREFIX, REGISTER_TEAM_PREFIX, EDIT_TEAM_PREFIX, ANSWER_VALIDATOR_PREFIX,\
-    SHOW_QUESTION_BOX_STAT_PREFIX, HEAD_SEE_USERS_LIST
+    SHOW_QUESTION_BOX_STAT_PREFIX, HEAD_SEE_USERS_LIST, HEAD_ADD_USER_FROM_OTHER_TEAMS,\
+    ADMIN_TOGGLE_EDIT_INFO, HEAD_REMOVE_USER_FROM_TEAM, HEAD_REMOVE_TEAM_MEMBER_PREFIX,\
+    HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -26,13 +28,15 @@ from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase, show_question_boxes
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, \
     show_users_list, add_head, show_users_list_buttons, show_heads_list_to_remove,\
-    remove_head, remove_user
+    remove_head, remove_user, toggle_edit_info
 from src.commands.other import questions_history, back_to_menu, show_help, cleaner, error_handler
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
 from src.commands.head import show_head_actions, prompt_add_task, add_task,\
     show_marked_tasks, approve_task, remove_task, show_tasks_to_remove,\
     show_questions_box_to_remove, remove_question_box, show_question_boxes_for_stat,\
-    show_question_box_stat_and_percent, see_team_users_list
+    show_question_box_stat_and_percent, see_team_users_list, show_teams_to_add_team_member,\
+    show_users_list_to_remove_from_team, add_team_member_from_other_teams, remove_team_member,\
+    show_users_to_add_member_from_other_team
 from src.commands.task import show_remaining_tasks, show_task_information, show_tasks_actions, show_done_tasks, show_tasks_total_score, mark_task
 
 
@@ -160,7 +164,9 @@ async def setup(
                 CallbackQueryHandler(
                     remove_user, REMOVE_USER_PREFIX),
                 CallbackQueryHandler(
-                    add_head, ADD_HEAD_PREFIX)
+                    add_head, ADD_HEAD_PREFIX),
+                CallbackQueryHandler(
+                    toggle_edit_info, exact_matcher(ADMIN_TOGGLE_EDIT_INFO))
             ],
         },
         fallbacks=[CallbackQueryHandler(
@@ -226,7 +232,17 @@ async def setup(
                 CallbackQueryHandler(
                     show_question_box_stat_and_percent(for_admin=False), GET_QUESTION_BOX_STAT_PREFIX),
                 CallbackQueryHandler(see_team_users_list,
-                                     exact_matcher(HEAD_SEE_USERS_LIST))
+                                     exact_matcher(HEAD_SEE_USERS_LIST)),
+                CallbackQueryHandler(show_users_list_to_remove_from_team, exact_matcher(
+                    HEAD_REMOVE_USER_FROM_TEAM)),
+                CallbackQueryHandler(remove_team_member,
+                                     HEAD_REMOVE_TEAM_MEMBER_PREFIX),
+                CallbackQueryHandler(show_teams_to_add_team_member, exact_matcher(
+                    HEAD_ADD_USER_FROM_OTHER_TEAMS)),
+                CallbackQueryHandler(
+                    add_team_member_from_other_teams, HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX),
+                CallbackQueryHandler(show_users_to_add_member_from_other_team,
+                                     HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX)
             ],
             HeadStates.HEAD_ADD_TASK: [MessageHandler(
                 filters.Document.Category("application/json"), add_task)]
