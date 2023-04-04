@@ -15,13 +15,15 @@ from src.utils.get_users_keyboard import get_users_keyboard
 from src.utils.is_admin import is_admin
 from src.utils.question_box_validator import question_box_validator
 from src.utils.ignore_none_head import ignore_none_head
+from src.utils.toggle_enable_to_edit import toggle_enable_to_edit
+from src.utils.get_enable_to_edit import get_enable_to_edit
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates, HeadStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,\
     ADMIN_PROMPT_ADD_QUESTION_BOX, ADMIN_SHOW_USERS_LIST_BUTTONS,\
     BACK_TO_HEAD_ACTIONS, ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, REMOVE_HEAD_PREFIX, \
-    ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE
+    ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, ADMIN_TOGGLE_EDIT_INFO
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -79,6 +81,8 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("📃 " + "نمایش لیست کاربران",
                                   callback_data=ADMIN_SHOW_USERS_LIST)
              ],
+            [InlineKeyboardButton("⚔️" + "غیر فعال سازی قابلیت تغییر اطلاعات" if await get_enable_to_edit() else "✅ " +
+                                  "فعال سازی قابلیت ویرایش اطلاعات", callback_data=ADMIN_TOGGLE_EDIT_INFO)],
             [get_back_to_menu_button()]
         ]
     )
@@ -422,5 +426,28 @@ async def remove_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ])
 
     await message_sender(text="کاربر بدبخت رو حذفش کردی 🫠", reply_markup=keyboard)
+
+    return AdminStates.ADMIN_ACTIONS
+
+
+async def toggle_edit_info(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    should_ignore = await ignore_none_admin(update, ctx)
+    message_sender = send_message(update, ctx)
+
+    if should_ignore:
+        return ConversationHandler.END
+
+    await toggle_enable_to_edit()
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    await message_sender(text="قابلیت تغییر اطلاعات همه تغییر کرد", reply_markup=keyboard)
 
     return AdminStates.ADMIN_ACTIONS
