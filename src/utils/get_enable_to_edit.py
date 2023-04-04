@@ -9,7 +9,7 @@ async def get_enable_to_edit():
     admin_log_data_file_path = path.join(
         getcwd(), DATA_DIR_PATH, ADMIN_DATA_FILE)
 
-    enable_to_edit = False
+    enable_to_edit = True
 
     async with open(admin_log_data_file_path, 'r') as handler:
         file = await handler.read()
