@@ -1,5 +1,8 @@
 from enum import Enum
 
+DATA_DIR_PATH = "data"
+ADMIN_DATA_FILE = "admin.json"
+
 STUDENT_CODE_LENGTH = 8
 QUESTIONS_PER_PAGE = 4
 

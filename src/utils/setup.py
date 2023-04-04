@@ -3,6 +3,7 @@ from telegram.ext import CommandHandler, ConversationHandler, MessageHandler,\
 
 from src.utils.db import connect_to_db
 from src.utils.exact_matcher import exact_matcher
+from src.utils.ensure_data_logs import ensure_data_logs
 from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTIONS, SKIP_QUESTIONS,\
     QUIT_QUESTIONS, START_QUESTIONS, STAT, BACK_TO_STAT, QUESTIONS_HISTORY,\
     NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, ADMIN, REGISTER_ADMIN,\
@@ -17,7 +18,8 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     QUESTION_BOX_PREP_PHASE_PREFIX, REGISTER_TEAM_PREFIX, EDIT_TEAM_PREFIX, ANSWER_VALIDATOR_PREFIX,\
     SHOW_QUESTION_BOX_STAT_PREFIX, HEAD_SEE_USERS_LIST, HEAD_ADD_USER_FROM_OTHER_TEAMS,\
     ADMIN_TOGGLE_EDIT_INFO, HEAD_REMOVE_USER_FROM_TEAM, HEAD_REMOVE_TEAM_MEMBER_PREFIX,\
-    HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX
+    HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX,\
+    EDIT_INFO_PREFIX
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -46,6 +48,9 @@ async def setup(
     # make sure the app is connected to db before doing any action
     await connect_to_db()
 
+    # make sure that data directory and data log files are created
+    await ensure_data_logs()
+
     start_handler = CommandHandler(START, start)
     menu_handler = CommandHandler(MENU, back_to_menu)
 
@@ -70,7 +75,7 @@ async def setup(
         entry_points=[CallbackQueryHandler(
             ask_to_edit_what, exact_matcher(EDIT))],
         states={
-            EditStates.EDIT_DECIDER: [CallbackQueryHandler(edit_decider)],
+            EditStates.EDIT_DECIDER: [CallbackQueryHandler(edit_decider, EDIT_INFO_PREFIX)],
             EditStates.EDIT_STUDENT_CODE: [MessageHandler(
                 filters.TEXT, register_student_code(RegisterMode.EDIT))],
             EditStates.EDIT_NICKNAME: [MessageHandler(

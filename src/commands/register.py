@@ -11,6 +11,8 @@ from src.utils.is_user_registered import is_user_registered
 from src.utils.send_message import send_message
 from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.utils.get_user import get_user
+from src.utils.get_enable_to_edit import get_enable_to_edit
+from src.utils.ignore_none_registered import ignore_none_registered
 from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode
 from src.constants.states import RegisterStates, EditStates
 from src.constants.commands import REGISTER_TEAM_PREFIX, EDIT_TEAM_PREFIX
@@ -70,6 +72,18 @@ def register_student_code(mode: RegisterMode):
 
         await update.message.delete()
 
+        if mode == RegisterMode.EDIT:
+            can_edit = await get_enable_to_edit()
+            should_ignore = await ignore_none_registered(update, ctx)
+            user = await get_user(user_id)
+
+            if should_ignore:
+                return ConversationHandler.END
+
+            if not can_edit and user.role != UserRole.ADMIN:
+                await message_sender(text="متاسفانه قابلیت ویرایش قفل شده است", reply_markup=await get_actions_keyboard(update, ctx))
+                return ConversationHandler.END
+
         if len(student_code) != STUDENT_CODE_LENGTH:
             await message_sender(text="کد دانشجویی که فرستادی اشتباهه دوباره کد دانشجوییت رو بفرست")
 
@@ -128,6 +142,17 @@ def register_team(mode: RegisterMode):
 
             return ConversationHandler.END
 
+        if mode == RegisterMode.EDIT:
+            can_edit = await get_enable_to_edit()
+            should_ignore = await ignore_none_registered(update, ctx)
+
+            if should_ignore:
+                return ConversationHandler.END
+
+            if not can_edit and user.role != UserRole.ADMIN:
+                await message_sender(text="متاسفانه قابلیت ویرایش قفل شده است", reply_markup=await get_actions_keyboard(update, ctx))
+                return ConversationHandler.END
+
         selected_team = None
 
         for team in Team:
@@ -179,6 +204,12 @@ def register_nickname(mode: RegisterMode):
         nickname = update.message.text
 
         await update.message.delete()
+
+        if mode == RegisterMode.EDIT:
+            should_ignore = await ignore_none_registered(update, ctx)
+
+            if should_ignore:
+                return ConversationHandler.END
 
         await db.user.update(
             where={

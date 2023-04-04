@@ -5,8 +5,9 @@ from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.utils.send_message import send_message
+from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.constants.states import EditStates
-from src.constants.commands import EDIT_TEAM_PREFIX
+from src.constants.commands import EDIT_TEAM_PREFIX, EDIT_INFO_PREFIX
 
 EDIT_ACTIONS = {
     "student_code": "🧑‍💻 " + "شماره دانشجویی",
@@ -26,7 +27,7 @@ async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     for key in EDIT_ACTIONS:
         keyboard_buttons.append([InlineKeyboardButton(
-            EDIT_ACTIONS[key], callback_data=EDIT_ACTIONS[key])])
+            EDIT_ACTIONS[key], callback_data=f"{EDIT_INFO_PREFIX} {EDIT_ACTIONS[key]}")])
 
     keyboard_buttons.append([get_back_to_menu_button()])
 
@@ -38,7 +39,7 @@ async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    action = update.callback_query.data
+    action = " ".join(update.callback_query.data.split(" ")[1:])
     message_sender = send_message(update, ctx)
 
     keyboard = InlineKeyboardMarkup(
@@ -55,6 +56,6 @@ async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await message_sender(text="تیمی که رفتی توش رو انتخاب کن", reply_markup=get_teams_keyboard(EDIT_TEAM_PREFIX))
         return EditStates.EDIT_TEAM
 
-    await message_sender(text="عملیات نادرست")
+    await message_sender(text="عملیات نادرست", reply_markup=await get_actions_keyboard(update, ctx))
 
     return EditStates.ASK_TO_EDIT_WHAT
