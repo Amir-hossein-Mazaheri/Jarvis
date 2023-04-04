@@ -10,6 +10,7 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_notification import send_notification
 from src.utils.get_jalali import get_jalali
 from src.utils.ignore_none_registered import ignore_none_registered
+from src.utils.get_user import get_user
 from src.constants.states import TaskStates
 from src.constants.commands import REMAINING_TASKS, DONE_TASKS, TOTAL_TASKS_SCORE,\
     BACK_TO_TASKS_ACTIONS, SUBMIT_TASK
@@ -104,7 +105,8 @@ async def show_task_information(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     text = (
         "جزییات تسک \n\n"
-        f"کارایی که باید انجام بدی: {task.job}\n\n"
+        f"تیم مربوطه: {task.team}\n\n"
+        f"تسک: {task.job}\n\n"
         f"وزن کار: {task.weight}\n\n"
         f"مهلت باقی مونده: {left_time}\n\n"
         f"تاریخ ددلاین: {get_jalali(task.deadline)}\n\n"
@@ -216,11 +218,7 @@ async def mark_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-    user = await db.user.find_unique(
-        where={
-            "tel_id": user_id
-        }
-    )
+    user = await get_user(user_id)
 
     await notification_sender(text=f"هد عزیز نوچه {user.nickname} تسک \"{task.job}\" رو مارک کردن برو اگه درسته تاییدش کن", team=task.team)
 
