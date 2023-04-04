@@ -15,6 +15,7 @@ model User {
     chat_id                    BigInt
     role                       UserRole       @default(STUDENT)
     team                       Team           @default(NO_TEAM)
+    secondary_teams            Team[]
     name                       String
     nickname                   String         @db.VarChar(255)
     student_code               String         @db.VarChar(20)
@@ -86,5 +87,6 @@ enum Team {
     HR
     DEVOPS
     QA
+    TECHNICAL
     NO_TEAM
 }
