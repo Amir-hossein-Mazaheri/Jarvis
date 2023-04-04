@@ -6,3 +6,4 @@ quiz.py
 __pycache__
 /*.json
 /*.text
+/data

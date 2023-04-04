@@ -11,6 +11,8 @@ services:
       - bot_token
       - bot_secret
       - server_ip
+    volumes:
+      - bot_data:/app/data
   db:
     image: postgres:15.1-alpine
     restart: always
@@ -27,6 +29,8 @@ services:
 
 volumes:
   db_data:
+    driver: local
+  bot_data:
     driver: local
 
 secrets:
