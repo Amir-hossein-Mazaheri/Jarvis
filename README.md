@@ -1,3 +1,24 @@
+# Versions Details
+
+## version 0.7 beta
+
+Changes since the last version:
+
+<ul>
+    <li>Added multiple team support for users</li>
+    <li>Fixed CallbackHandler pattern matching</li>
+    <li>Added toggle edit info for admin user</li>
+    <li>Added adding member from other team for head users</li>
+    <li>Added removing member from team for head users</li>
+    <li>Added see team members for head users</li>
+</ul>
+
+## version 0.5 beta
+
+First public publish of bot
+
+<br>
+
 # How to run bot
 
 ### It is much different for development and production so I made two different description
