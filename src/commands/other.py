@@ -1,5 +1,6 @@
 import os
 import logging
+from math import ceil
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime
@@ -71,7 +72,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mess
 
     questions_count = await db.question.count(where=where_options)
 
-    total_pages = (questions_count // QUESTIONS_PER_PAGE) + 1
+    total_pages = ceil(questions_count / QUESTIONS_PER_PAGE)
 
     keyboard_buttons = []
 
