@@ -1,5 +1,17 @@
 # Versions Details
 
+## version 0.8.3 beta
+
+Changes since the last version:
+
+<ul>
+    <li>Added public announcement for admin user</li>
+    <li>Added public announcement for updating bot for admin user</li>
+    <li>Fixed some little but harmful bugs</li>
+    <li>Fixed admin users list action too long message by adding pagination</li>
+    <li>Improved code maintainability and made it more cleaner by adding some super handlers</li>
+</ul>
+
 ## version 0.7 beta
 
 Changes since the last version:
