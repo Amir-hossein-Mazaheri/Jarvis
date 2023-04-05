@@ -1,3 +1,4 @@
+import os
 from math import ceil
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
@@ -17,7 +18,6 @@ from src.utils.question_box_validator import question_box_validator
 from src.utils.toggle_enable_to_edit import toggle_enable_to_edit
 from src.utils.get_enable_to_edit import get_enable_to_edit
 from src.utils.send_notification import send_notification
-from src.constants.other import USERS_PER_PAGE
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates, HeadStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,\
@@ -251,6 +251,7 @@ def add_question_box(for_admin: bool):
 
 async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     parsed_callback_query = update.callback_query.data.split(" ")
+    users_per_page = os.getenv("USERS_PER_PAGE", 20)
 
     curr_page = int(parsed_callback_query[1]) if len(
         parsed_callback_query) == 2 else 1
@@ -263,8 +264,8 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE, messag
 
     users = await db.user.find_many(
         where=where_options,
-        take=USERS_PER_PAGE,
-        skip=(curr_page - 1) * USERS_PER_PAGE
+        take=users_per_page,
+        skip=(curr_page - 1) * users_per_page
     )
 
     users_count = await db.user.count(where=where_options)
@@ -281,7 +282,7 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE, messag
         await message_sender(text="کاربری وجود نداره دیگه", reply_markup=InlineKeyboardMarkup(keyboard_buttons))
         return AdminStates.ADMIN_ACTIONS
 
-    total_pages = ceil(users_count / USERS_PER_PAGE)
+    total_pages = ceil(users_count / users_per_page)
 
     if curr_page < total_pages:
         keyboard_buttons = [[InlineKeyboardButton(

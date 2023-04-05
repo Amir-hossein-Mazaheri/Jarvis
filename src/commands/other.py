@@ -12,7 +12,7 @@ from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.send_message import send_message
 from src.utils.get_user import get_user
 from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, START
-from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE
+from src.constants.other import LAST_QUESTIONS_PAGE_KEY
 
 
 async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
@@ -35,6 +35,7 @@ async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_send
 async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
     user = await get_user(user_id)
+    questions_per_page = os.getenv("QUESTIONS_PER_PAGE", 4)
 
     callback_query = update.callback_query
     page = ctx.user_data.get(LAST_QUESTIONS_PAGE_KEY)
@@ -60,8 +61,8 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mess
 
     questions = await db.question.find_many(
         where=where_options,
-        take=QUESTIONS_PER_PAGE,
-        skip=(curr_page - 1) * QUESTIONS_PER_PAGE,
+        take=questions_per_page,
+        skip=(curr_page - 1) * questions_per_page,
         include={
             "options": True
         }
@@ -72,7 +73,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mess
 
     questions_count = await db.question.count(where=where_options)
 
-    total_pages = ceil(questions_count / QUESTIONS_PER_PAGE)
+    total_pages = ceil(questions_count / questions_per_page)
 
     keyboard_buttons = []
 

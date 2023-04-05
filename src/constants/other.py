@@ -5,7 +5,6 @@ ADMIN_DATA_FILE = "admin.json"
 
 STUDENT_CODE_LENGTH = 8
 QUESTIONS_PER_PAGE = 4
-USERS_PER_PAGE = 1
 
 QUESTION_BOX_ID_KEY = "question_box_id_key"
 QUESTION_ID_KEY = "question_id"
