@@ -3,22 +3,14 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.db import db
-from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.question_box_result_template import question_box_result_template
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
-from src.utils.send_message import send_message
 from src.constants.commands import BACK_TO_STAT, SHOW_QUESTION_BOX_STAT_PREFIX
 from src.constants.states import StatStates
 
 
-async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
-    message_sender = send_message(update, ctx)
 
     question_boxes = await db.questionsbox.find_many(
         where={
@@ -52,15 +44,9 @@ async def get_user_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return StatStates.SELECT_QUESTION_BOX
 
 
-async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     question_box_id = int(update.callback_query.data.split(" ")[1])
     user_id = update.effective_user.id
-    message_sender = send_message(update, ctx)
 
     question_box = await db.user.find_unique(
         where={
@@ -102,12 +88,7 @@ async def show_question_box_stat(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
     return StatStates.DECIDER
 
 
-async def stat_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def stat_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE, _):
     back_to_stat = update.callback_query.data
 
     if back_to_stat:

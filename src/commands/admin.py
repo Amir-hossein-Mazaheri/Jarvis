@@ -10,11 +10,9 @@ from src.utils.ignore_none_admin import ignore_none_admin
 from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.show_user import show_user
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
-from src.utils.send_message import send_message
 from src.utils.get_users_keyboard import get_users_keyboard
 from src.utils.is_admin import is_admin
 from src.utils.question_box_validator import question_box_validator
-from src.utils.ignore_none_head import ignore_none_head
 from src.utils.toggle_enable_to_edit import toggle_enable_to_edit
 from src.utils.get_enable_to_edit import get_enable_to_edit
 from src.constants.commands import REGISTER_ADMIN
@@ -26,11 +24,10 @@ from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,
     ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, ADMIN_TOGGLE_EDIT_INFO
 
 
-async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     should_ignore = await ignore_none_registered(update, ctx)
     is_there_any_admin = await is_there_admin()
     is_user_admin = await is_admin(update, ctx)
-    message_sender = send_message(update, ctx)
     message = update.message
 
     if message:
@@ -92,10 +89,9 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return AdminStates.ADMIN_ACTIONS
 
 
-async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     should_ignore = await ignore_none_registered(update, ctx)
     is_there_any_admin = await is_there_admin()
-    message_sender = send_message(update, ctx)
 
     if should_ignore or is_there_any_admin:
         return ConversationHandler.END
@@ -127,14 +123,8 @@ async def register_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def add_question_box(for_admin: bool):
-    async def add_question_box_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    async def add_question_box_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
         user_id = update.effective_user.id
-        should_ignore = await ignore_none_head(update, ctx)
-        message_sender = send_message(update, ctx)
-
-        if should_ignore:
-            return ConversationHandler.END
-
         callback_query = update.callback_query
 
         keyboard = InlineKeyboardMarkup(
@@ -251,13 +241,7 @@ def add_question_box(for_admin: bool):
     return add_question_box_action
 
 
-async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_admin(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     users = await db.user.find_many(where={
         "NOT": {
             "role": UserRole.ADMIN
@@ -286,13 +270,7 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def show_users_list_buttons(prefix: str, action: str):
-    async def show_users_list_buttons_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        should_ignore = await ignore_none_admin(update, ctx)
-        message_sender = send_message(update, ctx)
-
-        if should_ignore:
-            return ConversationHandler.END
-
+    async def show_users_list_buttons_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
         await message_sender(text=f"کدوم کاربر رو میخوای {action} کنی؟", reply_markup=await get_users_keyboard(exclude_heads=True, prefix=prefix))
 
         return AdminStates.ADMIN_ACTIONS
@@ -300,13 +278,8 @@ def show_users_list_buttons(prefix: str, action: str):
     return show_users_list_buttons_actions
 
 
-async def add_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def add_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = int(update.callback_query.data.split(" ")[1])
-    should_ignore = await ignore_none_admin(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     await db.user.update(
         where={
@@ -331,13 +304,7 @@ async def add_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return AdminStates.SHOW_ADMIN_ACTIONS
 
 
-async def show_heads_list_to_remove(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_admin(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def show_heads_list_to_remove(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     users = await db.user.find_many(
         where={
             "role": UserRole.HEAD,
@@ -365,13 +332,7 @@ async def show_heads_list_to_remove(update: Update, ctx: ContextTypes.DEFAULT_TY
     return AdminStates.ADMIN_ACTIONS
 
 
-async def remove_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_admin(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def remove_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     head_id = int(update.callback_query.data.split(" ")[1])
 
     await db.user.update(
@@ -399,13 +360,7 @@ async def remove_head(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return AdminStates.ADMIN_ACTIONS
 
 
-async def remove_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_admin(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def remove_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = int(update.callback_query.data.split(" ")[1])
 
     await db.user.delete(
@@ -430,13 +385,7 @@ async def remove_user(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return AdminStates.ADMIN_ACTIONS
 
 
-async def toggle_edit_info(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_admin(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def toggle_edit_info(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     await toggle_enable_to_edit()
 
     keyboard = InlineKeyboardMarkup([

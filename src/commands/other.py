@@ -5,7 +5,6 @@ from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime
 
 from src.utils.db import db
-from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.question_history_template import question_history_template
 from src.utils.get_actions_keyboard import get_actions_keyboard, KeyboardActions
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
@@ -15,9 +14,8 @@ from src.constants.commands import NEXT_QUESTIONS_PAGE, PREV_QUESTIONS_PAGE, STA
 from src.constants.other import LAST_QUESTIONS_PAGE_KEY, QUESTIONS_PER_PAGE
 
 
-async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     bot_name = os.getenv("BOT_NAME")
-    message_sender = send_message(update, ctx)
 
     text = (
         f"به {bot_name} خوش اومدی 👋\n\n"
@@ -33,14 +31,9 @@ async def show_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await message_sender(text=text, reply_markup=await get_actions_keyboard(update, ctx))
 
 
-async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
-    message_sender = send_message(update, ctx)
+async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
     user = await get_user(user_id)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     callback_query = update.callback_query
     page = ctx.user_data.get(LAST_QUESTIONS_PAGE_KEY)
@@ -116,9 +109,7 @@ async def questions_history(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await message_sender(text=questions_template, reply_markup=keyboard, edit=False)
 
 
-async def back_to_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    message_sender = send_message(update, ctx)
-
+async def back_to_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     await message_sender(text="🟥 " + "منوی ربات", reply_markup=await get_actions_keyboard(update, ctx))
 
     # to make sure that it exits conversation wether it get used in conversation handler

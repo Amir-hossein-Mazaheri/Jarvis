@@ -1,15 +1,12 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler
+from telegram.ext import ContextTypes
 from prisma.enums import Team, UserRole
 from datetime import datetime, timedelta
 import json
 
 from src.utils.db import db
-from src.utils.send_message import send_message
-from src.utils.ignore_none_head import ignore_none_head
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.task_validator import task_validator
-from src.utils.ignore_none_admin import ignore_none_admin
 from src.utils.send_question_boxes import send_question_boxes
 from src.utils.get_head_common_keyboard import get_head_common_keyboard
 from src.utils.send_notification import send_notification
@@ -25,13 +22,7 @@ from src.constants.commands import ADMIN_PROMPT_ADD_QUESTION_BOX, HEAD_ADD_TASK,
     HEAD_REMOVE_TEAM_MEMBER_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX
 
 
-async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     questions_box_buttons = [InlineKeyboardButton(
         "❓ " + "افزودن آزمون", callback_data=ADMIN_PROMPT_ADD_QUESTION_BOX),
         InlineKeyboardButton("💯 " + "وضعیت آزمون ها",
@@ -60,25 +51,14 @@ async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def prompt_add_task(update: Update, ctx: ContextTypes):
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def prompt_add_task(update: Update, ctx: ContextTypes, message_sender):
     await message_sender("خب برای من یه فایل json با ساختار مناسب بفرست", reply_markup=get_head_common_keyboard())
 
     return HeadStates.HEAD_ADD_TASK
 
 
-async def add_task(update: Update, ctx: ContextTypes):
+async def add_task(update: Update, ctx: ContextTypes, message_sender):
     user_id = update.effective_user.id
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     head = await db.user.find_unique(
         where={
@@ -156,13 +136,8 @@ async def add_task(update: Update, ctx: ContextTypes):
     await message_sender(text="تسک هایی که می خواستی ساخته شد", reply_markup=keyboard, edit=False)
 
 
-async def show_marked_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def show_marked_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     head = await db.user.find_unique(
         where={
@@ -190,13 +165,8 @@ async def show_marked_tasks(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await message_sender(text="لیست تسک هایی که بچه های تیمت مارک کردن", reply_markup=InlineKeyboardMarkup(keyboard_buttons))
 
 
-async def approve_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
+async def approve_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     notification_sender = send_notification(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     task_id = int(update.callback_query.data.split(" ")[1])
 
@@ -223,13 +193,8 @@ async def approve_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def show_tasks_to_remove(update: Update, ctx: ContextTypes):
+async def show_tasks_to_remove(update: Update, ctx: ContextTypes, message_sender):
     user_id = update.effective_user.id
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     head = await db.user.find_unique(
         where={
@@ -263,13 +228,8 @@ async def show_tasks_to_remove(update: Update, ctx: ContextTypes):
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def remove_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
+async def remove_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     notification_sender = send_notification(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     task_id = int(update.callback_query.data.split(" ")[1])
 
@@ -296,12 +256,7 @@ async def remove_task(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 def show_questions_box_to_remove(for_admin: bool):
-    async def show_questions_box_to_remove_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        should_ignore = await ignore_none_head(update, ctx)
-
-        if should_ignore:
-            return ConversationHandler.END
-
+    async def show_questions_box_to_remove_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, _):
         await send_question_boxes(update, ctx, for_admin, title="لیست تمام آزمون هایی که در حال برگزاری هست", prefix=REMOVE_QUESTION_BOX_PREFIX)
 
         if for_admin:
@@ -313,14 +268,8 @@ def show_questions_box_to_remove(for_admin: bool):
 
 
 def remove_question_box(for_admin: bool):
-    async def remove_question_box_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    async def remove_question_box_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
         user_id = update.effective_user.id
-        should_ignore = await ignore_none_admin(update, ctx) if for_admin else await ignore_none_head(update, ctx)
-        message_sender = send_message(update, ctx)
-
-        if should_ignore:
-            return ConversationHandler.END
-
         question_box_id = int(update.callback_query.data.split(" ")[1])
 
         where_options = {
@@ -355,12 +304,7 @@ def remove_question_box(for_admin: bool):
 
 
 def show_question_boxes_for_stat(for_admin: bool):
-    async def show_question_boxes_for_stat_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        should_ignore = await ignore_none_head(update, ctx)
-
-        if should_ignore:
-            return ConversationHandler.END
-
+    async def show_question_boxes_for_stat_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, _):
         await send_question_boxes(update, ctx, for_admin, title="تمام آزمون هایی که میتونی وضعیتشو ببینی", prefix=GET_QUESTION_BOX_STAT_PREFIX)
 
         if for_admin:
@@ -372,14 +316,8 @@ def show_question_boxes_for_stat(for_admin: bool):
 
 
 def show_question_box_stat_and_percent(for_admin: bool):
-    async def show_question_box_stat_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    async def show_question_box_stat_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
         user_id = update.effective_user.id
-        should_ignore = await ignore_none_admin(update, ctx) if for_admin else await ignore_none_head(update, ctx)
-        message_sender = send_message(update, ctx)
-
-        if should_ignore:
-            return ConversationHandler.END
-
         question_box_id = int(update.callback_query.data.split(" ")[1])
 
         where_options = {
@@ -440,13 +378,8 @@ def show_question_box_stat_and_percent(for_admin: bool):
     return show_question_box_stat_action
 
 
-async def see_team_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def see_team_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     head = await get_user(user_id)
 
@@ -476,13 +409,7 @@ async def see_team_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def show_teams_to_add_team_member(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def show_teams_to_add_team_member(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     keyboard = InlineKeyboardMarkup(
         get_teams_keyboard(
             HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX, return_keyboard=False, include_cancel_button=False) +
@@ -493,13 +420,7 @@ async def show_teams_to_add_team_member(update: Update, ctx: ContextTypes.DEFAUL
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def show_users_to_add_member_from_other_team(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def show_users_to_add_member_from_other_team(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     callback_team = update.callback_query.data.split(" ")[1]
     target_team = None
 
@@ -538,13 +459,8 @@ async def show_users_to_add_member_from_other_team(update: Update, ctx: ContextT
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def add_team_member_from_other_teams(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def add_team_member_from_other_teams(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     memeber_id = int(update.callback_query.data.split(" ")[1])
 
@@ -571,13 +487,8 @@ async def add_team_member_from_other_teams(update: Update, ctx: ContextTypes.DEF
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def show_users_list_to_remove_from_team(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def show_users_list_to_remove_from_team(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     head = await get_user(user_id)
 
@@ -617,13 +528,8 @@ async def show_users_list_to_remove_from_team(update: Update, ctx: ContextTypes.
     return HeadStates.HEAD_ACTION_DECIDER
 
 
-async def remove_team_member(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def remove_team_member(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
-    should_ignore = await ignore_none_head(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
 
     member_id = int(update.callback_query.data.split(" ")[1])
 

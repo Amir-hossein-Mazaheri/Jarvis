@@ -8,20 +8,17 @@ from src.utils.is_user_registered import is_user_registered
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.utils.is_user_registered import is_user_registered
-from src.utils.send_message import send_message
 from src.utils.get_teams_keyboard import get_teams_keyboard
 from src.utils.get_user import get_user
 from src.utils.get_enable_to_edit import get_enable_to_edit
-from src.utils.ignore_none_registered import ignore_none_registered
 from src.constants.other import STUDENT_CODE_LENGTH, RegisterMode
 from src.constants.states import RegisterStates, EditStates
-from src.constants.commands import REGISTER_TEAM_PREFIX, EDIT_TEAM_PREFIX
+from src.constants.commands import REGISTER_TEAM_PREFIX
 
 
-async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     bot_name = os.getenv("BOT_NAME")
     keyboard = await get_actions_keyboard(update, ctx)
-    message_sender = send_message(update, ctx)
 
     ctx._application.drop_chat_data(update.effective_chat.id)
 
@@ -38,9 +35,7 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await message_sender(text=text, reply_markup=keyboard, edit=False)
 
 
-async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    message_sender = send_message(update, ctx)
-
+async def ask_for_student_code(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     if await is_user_registered(update, ctx):
         await message_sender(text="شما قبلا ثبت نام کرده اید")
         return ConversationHandler.END
@@ -63,22 +58,17 @@ def register_student_code(mode: RegisterMode):
         after that differ, for that issue I made the parent function to take an arg
     """
 
-    async def register_student_code_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    async def register_student_code_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
         user_id = update.effective_user.id
         chat_id = update.effective_chat.id
         name = update.effective_user.name
         student_code = update.message.text
-        message_sender = send_message(update, ctx)
 
         await update.message.delete()
 
         if mode == RegisterMode.EDIT:
             can_edit = await get_enable_to_edit()
-            should_ignore = await ignore_none_registered(update, ctx)
             user = await get_user(user_id)
-
-            if should_ignore:
-                return ConversationHandler.END
 
             if not can_edit and user.role != UserRole.ADMIN:
                 await message_sender(text="متاسفانه قابلیت ویرایش قفل شده است", reply_markup=await get_actions_keyboard(update, ctx))
@@ -131,9 +121,8 @@ def register_student_code(mode: RegisterMode):
 
 
 def register_team(mode: RegisterMode):
-    async def register_team_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    async def register_team_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
         user_id = update.effective_user.id
-        message_sender = send_message(update, ctx)
         callback_team = update.callback_query.data.split(" ")[1]
         user = await get_user(user_id)
 
@@ -144,10 +133,6 @@ def register_team(mode: RegisterMode):
 
         if mode == RegisterMode.EDIT:
             can_edit = await get_enable_to_edit()
-            should_ignore = await ignore_none_registered(update, ctx)
-
-            if should_ignore:
-                return ConversationHandler.END
 
             if not can_edit and user.role != UserRole.ADMIN:
                 await message_sender(text="متاسفانه قابلیت ویرایش قفل شده است", reply_markup=await get_actions_keyboard(update, ctx))
@@ -198,18 +183,11 @@ def register_team(mode: RegisterMode):
 
 
 def register_nickname(mode: RegisterMode):
-    async def register_nickname_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        message_sender = send_message(update, ctx)
+    async def register_nickname_action(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
         user_id = update.effective_user.id
         nickname = update.message.text
 
         await update.message.delete()
-
-        if mode == RegisterMode.EDIT:
-            should_ignore = await ignore_none_registered(update, ctx)
-
-            if should_ignore:
-                return ConversationHandler.END
 
         await db.user.update(
             where={

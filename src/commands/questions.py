@@ -7,10 +7,8 @@ from src.utils.db import db
 from src.utils.get_next_question_id import get_next_question_id
 from src.utils.show_questions_result import show_questions_result
 from src.utils.show_question import show_question
-from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.get_actions_keyboard import get_actions_keyboard, KeyboardActions
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
-from src.utils.send_message import send_message
 from src.utils.set_timeout import set_timeout
 from src.utils.get_user import get_user
 from src.constants.states import QuestionStates
@@ -24,13 +22,7 @@ async def time_is_up(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return await show_questions_result(update, ctx, "زمان آزمونت تموم شده\n\n")
 
 
-async def show_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # should_ignore = await ignore_none_registered(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    # if should_ignore:
-    #     return ConversationHandler.END
-
+async def show_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     user_id = update.effective_user.id
 
     user = await get_user(user_id)
@@ -70,13 +62,7 @@ async def show_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return QuestionStates.PREP_PHASE
 
 
-async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # should_ignore = await ignore_none_registered(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    # if should_ignore:
-    #     return ConversationHandler.END
-
+async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     questions_box_id = int(update.callback_query.data.split(" ")[1])
 
     keyboard = InlineKeyboardMarkup(
@@ -107,12 +93,7 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return QuestionStates.SHOW_QUESTIONS
 
 
-async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # should_ignore = await ignore_none_registered(update, ctx)
-
-    # if should_ignore:
-    #     return ConversationHandler.END
-
+async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, _):
     question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
 
     question = await db.question.find_first(
@@ -145,16 +126,11 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return QuestionStates.ANSWER_VALIDATOR
 
 
-async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # should_ignore = await ignore_none_registered(update, ctx)
-    message_sender = send_message(update, ctx)
+async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
     if question_time_is_up:
         return ConversationHandler.END
-
-    # if should_ignore:
-    #     return ConversationHandler.END
 
     answer_id = int(update.callback_query.data.split(" ")[1])
 
@@ -225,11 +201,6 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # should_ignore = await ignore_none_registered(update, ctx)
-
-    # if should_ignore:
-    #     return ConversationHandler.END
-
     next_question_id = ctx.user_data.get(NEXT_QUESTION_ID_KEY)
 
     # these two lines makes sure that next question is added to seen questions list
@@ -254,12 +225,7 @@ async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return QuestionStates.ANSWER_VALIDATOR
 
 
-async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # should_ignore = await ignore_none_registered(update, ctx)
-
-    # if should_ignore:
-    #     return ConversationHandler.END
-
+async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE, _):
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
     if question_time_is_up:
@@ -278,10 +244,5 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return await get_next_question(update, ctx)
 
 
-async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # should_ignore = await ignore_none_registered(update, ctx)
-
-    # if should_ignore:
-    #     return ConversationHandler.END
-
+async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, _):
     return await show_questions_result(update, ctx)

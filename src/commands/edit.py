@@ -1,10 +1,8 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler
+from telegram.ext import ContextTypes
 
-from src.utils.ignore_none_registered import ignore_none_registered
 from src.utils.get_back_to_menu_button import get_back_to_menu_button
 from src.utils.get_teams_keyboard import get_teams_keyboard
-from src.utils.send_message import send_message
 from src.utils.get_actions_keyboard import get_actions_keyboard
 from src.constants.states import EditStates
 from src.constants.commands import EDIT_TEAM_PREFIX, EDIT_INFO_PREFIX
@@ -16,13 +14,7 @@ EDIT_ACTIONS = {
 }
 
 
-async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
-    message_sender = send_message(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
-
+async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     keyboard_buttons = []
 
     for key in EDIT_ACTIONS:
@@ -38,9 +30,8 @@ async def ask_to_edit_what(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return EditStates.EDIT_DECIDER
 
 
-async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def edit_decider(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
     action = " ".join(update.callback_query.data.split(" ")[1:])
-    message_sender = send_message(update, ctx)
 
     keyboard = InlineKeyboardMarkup(
         [[get_back_to_menu_button()]]
