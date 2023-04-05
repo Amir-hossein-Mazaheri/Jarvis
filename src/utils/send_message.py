@@ -22,9 +22,6 @@ def send_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         try:
             if edit:
                 if last_message_id:
-                    # await ctx.bot.delete_message(chat_id=chat_id, message_id=last_message_id)
-                    # sent_message = await ctx.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
-
                     sent_message = await ctx.bot.edit_message_text(message_id=last_message_id, chat_id=chat_id, text=text, reply_markup=reply_markup)
                 else:
                     sent_message = await ctx.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
@@ -34,5 +31,7 @@ def send_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             ctx.user_data[LAST_MESSAGE_KEY] = sent_message.id
         except BadRequest as ex:
             logging.error(ex.message)
+
+        return sent_message
 
     return send_message

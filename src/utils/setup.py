@@ -22,7 +22,7 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     SHOW_QUESTION_BOX_STAT_PREFIX, HEAD_SEE_USERS_LIST, HEAD_ADD_USER_FROM_OTHER_TEAMS,\
     ADMIN_TOGGLE_EDIT_INFO, HEAD_REMOVE_USER_FROM_TEAM, HEAD_REMOVE_TEAM_MEMBER_PREFIX,\
     HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX,\
-    EDIT_INFO_PREFIX
+    EDIT_INFO_PREFIX, ADMIN_PUBLIC_ANNOUNCEMENT, ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -33,7 +33,7 @@ from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase, show_question_boxes
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, \
     show_users_list, add_head, show_users_list_buttons, show_heads_list_to_remove,\
-    remove_head, remove_user, toggle_edit_info
+    remove_head, remove_user, toggle_edit_info, public_announcement, public_announcement_about_version_change
 from src.commands.other import questions_history, back_to_menu, show_help, cleaner, error_handler
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
 from src.commands.head import show_head_actions, prompt_add_task, add_task,\
@@ -206,8 +206,23 @@ async def setup(
                 SuperCallbackQueryHandler(
                     add_head, ADD_HEAD_PREFIX, "prefix", "admin"),
                 SuperCallbackQueryHandler(
-                    toggle_edit_info, ADMIN_TOGGLE_EDIT_INFO, guard="admin")
+                    toggle_edit_info, ADMIN_TOGGLE_EDIT_INFO, guard="admin"),
+                SuperCallbackQueryHandler(
+                    public_announcement, ADMIN_PUBLIC_ANNOUNCEMENT, guard="admin"
+                ),
+                SuperCallbackQueryHandler(
+                    public_announcement_about_version_change, ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT, guard="admin"
+                ),
             ],
+            AdminStates.PUBLIC_ANNOUNCEMENT: [
+                SuperMessageHandler(
+                    filters.TEXT, public_announcement, guard="admin"
+                )
+            ],
+            AdminStates.PUBLIC_VERSION_CHANGE_ANNOUNCEMENT: [
+                SuperMessageHandler(
+                    filters.TEXT, public_announcement_about_version_change, guard="admin")
+            ]
         },
         fallbacks=[SuperCallbackQueryHandler(
             back_to_menu, BACK_TO_MENU, guard="none")]

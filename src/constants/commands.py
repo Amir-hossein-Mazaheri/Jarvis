@@ -19,6 +19,8 @@ ADMIN_SHOW_QUESTION_BOXES_FOR_STAT = "admin_question_boxes_showing_for_stat"
 ADMIN_SHOW_HEADS_LIST_TO_REMOVE = "admin_show_heads_list_to_remove"
 ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE = "admin_show_none_head_list_to_remove"
 ADMIN_TOGGLE_EDIT_INFO = "admin_toggle_edit_info"
+ADMIN_PUBLIC_ANNOUNCEMENT = "admin_public_announcement"
+ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT = "admin_public_version_change_announcement"
 
 HEAD_ADD_TASK = "head_add_task"
 HEAD_SHOW_MARKED_TASKS = "show_marked_tasks"

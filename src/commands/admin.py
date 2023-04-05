@@ -15,13 +15,15 @@ from src.utils.is_admin import is_admin
 from src.utils.question_box_validator import question_box_validator
 from src.utils.toggle_enable_to_edit import toggle_enable_to_edit
 from src.utils.get_enable_to_edit import get_enable_to_edit
+from src.utils.send_notification import send_notification
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates, HeadStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,\
     ADMIN_PROMPT_ADD_QUESTION_BOX, ADMIN_SHOW_USERS_LIST_BUTTONS,\
     BACK_TO_HEAD_ACTIONS, ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, REMOVE_HEAD_PREFIX, \
-    ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, ADMIN_TOGGLE_EDIT_INFO
+    ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, ADMIN_TOGGLE_EDIT_INFO, ADMIN_PUBLIC_ANNOUNCEMENT,\
+    ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
@@ -80,6 +82,9 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mes
              ],
             [InlineKeyboardButton("⚔️" + "غیر فعال سازی قابلیت تغییر اطلاعات" if await get_enable_to_edit() else "✅ " +
                                   "فعال سازی قابلیت ویرایش اطلاعات", callback_data=ADMIN_TOGGLE_EDIT_INFO)],
+            [InlineKeyboardButton(
+                "🆕 " + "اعلان آپدیت ربات", callback_data=ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT),
+             InlineKeyboardButton("📢 " + "اعلان عمومی", callback_data=ADMIN_PUBLIC_ANNOUNCEMENT)],
             [get_back_to_menu_button()]
         ]
     )
@@ -398,5 +403,106 @@ async def toggle_edit_info(update: Update, ctx: ContextTypes.DEFAULT_TYPE, messa
     ])
 
     await message_sender(text="قابلیت تغییر اطلاعات همه تغییر کرد", reply_markup=keyboard)
+
+    return AdminStates.ADMIN_ACTIONS
+
+
+async def public_announcer(text: str, update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
+    notification_sender = send_notification(update, ctx)
+
+    users = await db.user.find_many(
+        where={
+            "NOT": {
+                "role": UserRole.ADMIN
+            }
+        }
+    )
+
+    for user in users:
+        await notification_sender(text=text, user_id=user.tel_id)
+
+
+async def public_announcement(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
+    should_prompt = update.callback_query
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    if should_prompt:
+        await message_sender(text="چیزی که می خوای به اعلان کنی رو بهم بگو", reply_markup=keyboard)
+
+        return AdminStates.PUBLIC_ANNOUNCEMENT
+
+    announcement_message = update.message.text
+
+    sent_message = await message_sender(text="در حال ارسال اعلان های عمومی، لطفا منتظر بمون و کار دیگه هم نکن...", edit=False)
+
+    await public_announcer(announcement_message, update, ctx, message_sender)
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    # for some unknown reason message_sender is not updating the correct message
+    await ctx.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=sent_message.id,
+        text="اعلان عمومی ربات با موفقیت انجام شد",
+        reply_markup=keyboard
+    )
+
+    return AdminStates.ADMIN_ACTIONS
+
+
+async def public_announcement_about_version_change(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
+    should_prompt = update.callback_query
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    if should_prompt:
+        await message_sender(text="چند ساعت دیگه ربات آپدیت میشه؟", reply_markup=keyboard)
+
+        return AdminStates.PUBLIC_VERSION_CHANGE_ANNOUNCEMENT
+
+    hours_left_to_bot_update = update.message.text
+
+    sent_message = await message_sender(text="در حال ارسال اعلان های آپدیت ربات، لطفا منتظر بمون و کار دیگه هم نکن...", edit=False)
+
+    await public_announcer(f"کاربران گرامی ربات {hours_left_to_bot_update} ساعت دیگر آپدیت خواهد شد و به محض تموم شدن آپدیت اطلاع رسانی می شود", update, ctx, message_sender)
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    # for some unknown reason message_sender is not updating the correct message
+    await ctx.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=sent_message.id,
+        text="اعلان آپدیت ربات با موفقیت انجام شد",
+        reply_markup=keyboard
+    )
 
     return AdminStates.ADMIN_ACTIONS
