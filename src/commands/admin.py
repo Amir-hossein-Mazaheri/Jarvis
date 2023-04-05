@@ -1,3 +1,4 @@
+from math import ceil
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from src.utils.question_box_validator import question_box_validator
 from src.utils.toggle_enable_to_edit import toggle_enable_to_edit
 from src.utils.get_enable_to_edit import get_enable_to_edit
 from src.utils.send_notification import send_notification
+from src.constants.other import USERS_PER_PAGE
 from src.constants.commands import REGISTER_ADMIN
 from src.constants.states import AdminStates, HeadStates
 from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,\
@@ -23,7 +25,8 @@ from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,
     BACK_TO_HEAD_ACTIONS, ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, \
     ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, REMOVE_HEAD_PREFIX, \
     ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, ADMIN_TOGGLE_EDIT_INFO, ADMIN_PUBLIC_ANNOUNCEMENT,\
-    ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT
+    ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT, ADMIN_NEXT_USERS_PAGE_PREFIX,\
+    ADMIN_PREV_USERS_PAGE_PREFIX
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
@@ -247,21 +250,50 @@ def add_question_box(for_admin: bool):
 
 
 async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
-    users = await db.user.find_many(where={
+    parsed_callback_query = update.callback_query.data.split(" ")
+
+    curr_page = int(parsed_callback_query[1]) if len(
+        parsed_callback_query) == 2 else 1
+
+    where_options = {
         "NOT": {
             "role": UserRole.ADMIN
         }
-    })
+    }
 
-    keyboard = InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
-                get_back_to_menu_button()
-            ]
-        ]
+    users = await db.user.find_many(
+        where=where_options,
+        take=USERS_PER_PAGE,
+        skip=(curr_page - 1) * USERS_PER_PAGE
     )
+
+    users_count = await db.user.count(where=where_options)
+
+    keyboard_buttons = [
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+    ]
+
+    if len(users) == 0:
+        await message_sender(text="کاربری وجود نداره دیگه", reply_markup=InlineKeyboardMarkup(keyboard_buttons))
+        return AdminStates.ADMIN_ACTIONS
+
+    total_pages = ceil(users_count / USERS_PER_PAGE)
+
+    if curr_page < total_pages:
+        keyboard_buttons = [[InlineKeyboardButton(
+            "⏭️" + "صفحه بعدی",
+            callback_data=f"{ADMIN_NEXT_USERS_PAGE_PREFIX} {curr_page + 1}"
+        )]] + keyboard_buttons
+
+    if curr_page != 1:
+        keyboard_buttons = [[InlineKeyboardButton(
+            "صفحه قبلی" + "⏮️",
+            callback_data=f"{ADMIN_PREV_USERS_PAGE_PREFIX} {curr_page - 1}"
+        )]] + keyboard_buttons
 
     users_template = ""
 
@@ -269,7 +301,7 @@ async def show_users_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE, messag
         users_template += show_user(user.name, user.nickname, user.student_code,
                                     user.role, i + 1)
 
-    await message_sender(text=users_template, reply_markup=keyboard)
+    await message_sender(text=users_template, reply_markup=InlineKeyboardMarkup(keyboard_buttons))
 
     return AdminStates.ADMIN_ACTIONS
 
@@ -458,7 +490,7 @@ async def public_announcement(update: Update, ctx: ContextTypes.DEFAULT_TYPE, me
     await ctx.bot.edit_message_text(
         chat_id=update.effective_chat.id,
         message_id=sent_message.id,
-        text="اعلان عمومی ربات با موفقیت انجام شد",
+        text="اعلان عمومی ربات با موفقیت انجام شدش، داپش",
         reply_markup=keyboard
     )
 
@@ -486,7 +518,7 @@ async def public_announcement_about_version_change(update: Update, ctx: ContextT
 
     sent_message = await message_sender(text="در حال ارسال اعلان های آپدیت ربات، لطفا منتظر بمون و کار دیگه هم نکن...", edit=False)
 
-    await public_announcer(f"کاربران گرامی ربات {hours_left_to_bot_update} ساعت دیگر آپدیت خواهد شد و به محض تموم شدن آپدیت اطلاع رسانی می شود", update, ctx, message_sender)
+    await public_announcer(f"رفیق ربات {hours_left_to_bot_update} ساعت دیگر آپدیت میشه و به محض تموم شدن آپدیت همینجوری بهت میگیم", update, ctx, message_sender)
 
     keyboard = InlineKeyboardMarkup([
         [
@@ -501,7 +533,7 @@ async def public_announcement_about_version_change(update: Update, ctx: ContextT
     await ctx.bot.edit_message_text(
         chat_id=update.effective_chat.id,
         message_id=sent_message.id,
-        text="اعلان آپدیت ربات با موفقیت انجام شد",
+        text="اعلان آپدیت ربات با موفقیت انجام شدش، داپش",
         reply_markup=keyboard
     )
 

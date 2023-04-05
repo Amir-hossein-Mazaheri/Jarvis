@@ -22,7 +22,8 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     SHOW_QUESTION_BOX_STAT_PREFIX, HEAD_SEE_USERS_LIST, HEAD_ADD_USER_FROM_OTHER_TEAMS,\
     ADMIN_TOGGLE_EDIT_INFO, HEAD_REMOVE_USER_FROM_TEAM, HEAD_REMOVE_TEAM_MEMBER_PREFIX,\
     HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX,\
-    EDIT_INFO_PREFIX, ADMIN_PUBLIC_ANNOUNCEMENT, ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT
+    EDIT_INFO_PREFIX, ADMIN_PUBLIC_ANNOUNCEMENT, ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT,\
+    ADMIN_NEXT_USERS_PAGE_PREFIX, ADMIN_PREV_USERS_PAGE_PREFIX
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -177,39 +178,61 @@ async def setup(
             AdminStates.ADMIN_ACTIONS: [
                 SuperCallbackQueryHandler(show_users_list_buttons(
                     ADD_HEAD_PREFIX, "هد"), ADMIN_SHOW_USERS_LIST_BUTTONS, guard="admin"),
+
                 SuperCallbackQueryHandler(
                     show_users_list, ADMIN_SHOW_USERS_LIST, guard="admin"),
+
+                SuperCallbackQueryHandler(
+                    show_users_list, ADMIN_NEXT_USERS_PAGE_PREFIX, "prefix", "admin"),
+
+                SuperCallbackQueryHandler(
+                    show_users_list, ADMIN_PREV_USERS_PAGE_PREFIX, "prefix", "admin"),
+
                 SuperCallbackQueryHandler(show_questions_box_to_remove(
                     for_admin=True), ADMIN_SHOW_QUESTIONS_BOX_TO_REMOVE, guard="admin"),
+
                 SuperCallbackQueryHandler(remove_question_box(
                     for_admin=True), REMOVE_QUESTION_BOX_PREFIX, "prefix", "admin"),
+
                 SuperCallbackQueryHandler(
                     show_admin_actions, BACK_TO_ADMIN_ACTIONS, guard="none"),
+
                 SuperMessageHandler(
                     filters.Document.Category(
                         'application/json'),
                     add_question_box(for_admin=True), "admin"),
+
                 SuperCallbackQueryHandler(
                     add_question_box(for_admin=True), ADMIN_PROMPT_ADD_QUESTION_BOX, guard="none"),
+
                 SuperCallbackQueryHandler(show_question_boxes_for_stat(
                     for_admin=True), ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, guard="admin"),
+
                 SuperCallbackQueryHandler(show_question_box_stat_and_percent(
                     for_admin=True), GET_QUESTION_BOX_STAT_PREFIX, "prefix", "admin"),
+
                 SuperCallbackQueryHandler(
                     show_heads_list_to_remove, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, guard="admin"),
+
                 SuperCallbackQueryHandler(
                     remove_head, REMOVE_HEAD_PREFIX, "prefix", "admin"),
+
                 SuperCallbackQueryHandler(
                     show_users_list_buttons(REMOVE_USER_PREFIX, "کاربر"), ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, guard="admin"),
+
                 SuperCallbackQueryHandler(
                     remove_user, REMOVE_USER_PREFIX, "prefix", "admin"),
+
                 SuperCallbackQueryHandler(
                     add_head, ADD_HEAD_PREFIX, "prefix", "admin"),
+
                 SuperCallbackQueryHandler(
                     toggle_edit_info, ADMIN_TOGGLE_EDIT_INFO, guard="admin"),
+
                 SuperCallbackQueryHandler(
                     public_announcement, ADMIN_PUBLIC_ANNOUNCEMENT, guard="admin"
                 ),
+
                 SuperCallbackQueryHandler(
                     public_announcement_about_version_change, ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT, guard="admin"
                 ),
