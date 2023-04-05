@@ -75,7 +75,13 @@ def register_student_code(mode: RegisterMode):
                 return ConversationHandler.END
 
         if len(student_code) != STUDENT_CODE_LENGTH:
-            await message_sender(text="کد دانشجویی که فرستادی اشتباهه دوباره کد دانشجوییت رو بفرست")
+            keyboard = InlineKeyboardMarkup(
+                [
+                    [get_back_to_menu_button()]
+                ]
+            )
+
+            await message_sender(text="کد دانشجویی که فرستادی اشتباهه دوباره کد دانشجوییت رو بفرست", reply_markup=keyboard)
 
             if mode == RegisterMode.CREATE:
                 return RegisterStates.REGISTER_STUDENT_CODE
