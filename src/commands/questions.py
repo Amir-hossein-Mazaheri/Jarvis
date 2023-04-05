@@ -25,17 +25,18 @@ async def time_is_up(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def show_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
+    # should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
 
-    if should_ignore:
-        return ConversationHandler.END
+    # if should_ignore:
+    #     return ConversationHandler.END
 
     user_id = update.effective_user.id
 
     user = await get_user(user_id)
 
-    OR = list(map(lambda t: {"team": t}, user.secondary_teams))
+    OR = [
+        *list(map(lambda t: {"team": t}, user.secondary_teams)), {"team": user.team}]
 
     question_boxes = await db.questionsbox.find_many(
         where={
@@ -70,11 +71,11 @@ async def show_question_boxes(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
+    # should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
 
-    if should_ignore:
-        return ConversationHandler.END
+    # if should_ignore:
+    #     return ConversationHandler.END
 
     questions_box_id = int(update.callback_query.data.split(" ")[1])
 
@@ -107,10 +108,10 @@ async def prep_phase(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
+    # should_ignore = await ignore_none_registered(update, ctx)
 
-    if should_ignore:
-        return ConversationHandler.END
+    # if should_ignore:
+    #     return ConversationHandler.END
 
     question_box_id = ctx.user_data.get(QUESTION_BOX_ID_KEY)
 
@@ -145,15 +146,15 @@ async def send_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
+    # should_ignore = await ignore_none_registered(update, ctx)
     message_sender = send_message(update, ctx)
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
     if question_time_is_up:
         return ConversationHandler.END
 
-    if should_ignore:
-        return ConversationHandler.END
+    # if should_ignore:
+    #     return ConversationHandler.END
 
     answer_id = int(update.callback_query.data.split(" ")[1])
 
@@ -224,10 +225,10 @@ async def answer_validator(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
+    # should_ignore = await ignore_none_registered(update, ctx)
 
-    if should_ignore:
-        return ConversationHandler.END
+    # if should_ignore:
+    #     return ConversationHandler.END
 
     next_question_id = ctx.user_data.get(NEXT_QUESTION_ID_KEY)
 
@@ -254,10 +255,10 @@ async def get_next_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
+    # should_ignore = await ignore_none_registered(update, ctx)
 
-    if should_ignore:
-        return ConversationHandler.END
+    # if should_ignore:
+    #     return ConversationHandler.END
 
     question_time_is_up = ctx.user_data.get(QUESTIONS_TIME_IS_UP)
 
@@ -278,14 +279,9 @@ async def skip_question(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def quit_questions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    should_ignore = await ignore_none_registered(update, ctx)
+    # should_ignore = await ignore_none_registered(update, ctx)
 
-    if should_ignore:
-        return ConversationHandler.END
-
-    should_ignore = await ignore_none_registered(update, ctx)
-
-    if should_ignore:
-        return ConversationHandler.END
+    # if should_ignore:
+    #     return ConversationHandler.END
 
     return await show_questions_result(update, ctx)
