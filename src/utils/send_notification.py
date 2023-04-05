@@ -1,5 +1,7 @@
+import logging
 from telegram import Update
 from telegram.ext import ContextTypes
+from telegram.error import Forbidden
 from prisma.enums import Team, UserRole
 from prisma.models import User
 
@@ -35,8 +37,11 @@ def send_notification(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 }
             )
 
-        sent_message = await ctx.bot.send_message(chat_id=user.chat_id, text=text + f"\n\n برای دیدن دوباره منو روی /{START} کلیک کن")
+        try:
+            sent_message = await ctx.bot.send_message(chat_id=user.chat_id, text=text + "\n\n<b>اگه وسط یه کاری بودی میتونی ادامش بدی و این پیام رو نادیده بگیری برای ادامه کارت اصلا خط زیر رو نادیده بگیر</b>\n" + f"\n برای دیدن دوباره منو روی /{START} کلیک کن")
 
-        ctx.bot_data[user.id] = sent_message.id
+            ctx.bot_data[user.id] = sent_message.id
+        except Forbidden as ex:
+            logging.error(ex.message)
 
     return notification_sender
