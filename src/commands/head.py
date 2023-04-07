@@ -53,7 +53,12 @@ async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mess
 
 
 async def prompt_add_task(update: Update, ctx: ContextTypes, message_sender):
-    await message_sender("خب برای من یه فایل json با ساختار مناسب بفرست", reply_markup=get_head_common_keyboard())
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("ساخت فایلش", web_app={"url": "http://localhost:5173/"})],
+         *get_head_common_keyboard(return_keyboard=False)]
+    )
+
+    await message_sender("خب برای من یه فایل json با ساختار مناسب بفرست", reply_markup=keyboard)
 
     return HeadStates.HEAD_ADD_TASK
 

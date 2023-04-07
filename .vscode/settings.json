@@ -2,10 +2,16 @@
     "cSpell.words": [
         "aiofiles",
         "dotenv",
+        "formkit",
+        "hookform",
+        "immer",
         "jdatetime",
         "levelname",
         "persiantools",
+        "prefixer",
         "pytz",
-        "questionsbox"
+        "questionsbox",
+        "stylis",
+        "zustand"
     ]
 }
