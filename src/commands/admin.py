@@ -26,7 +26,7 @@ from src.constants.commands import ADMIN_SHOW_USERS_LIST, BACK_TO_ADMIN_ACTIONS,
     ADMIN_SHOW_QUESTION_BOXES_FOR_STAT, ADMIN_SHOW_HEADS_LIST_TO_REMOVE, REMOVE_HEAD_PREFIX, \
     ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE, ADMIN_TOGGLE_EDIT_INFO, ADMIN_PUBLIC_ANNOUNCEMENT,\
     ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT, ADMIN_NEXT_USERS_PAGE_PREFIX,\
-    ADMIN_PREV_USERS_PAGE_PREFIX
+    ADMIN_PREV_USERS_PAGE_PREFIX, ADMIN_ANNOUNCE_END_OF_BOT_UPDATE
 
 
 async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
@@ -85,9 +85,11 @@ async def show_admin_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mes
              ],
             [InlineKeyboardButton("⚔️" + "غیر فعال سازی قابلیت تغییر اطلاعات" if await get_enable_to_edit() else "✅ " +
                                   "فعال سازی قابلیت ویرایش اطلاعات", callback_data=ADMIN_TOGGLE_EDIT_INFO)],
-            [InlineKeyboardButton(
+            [InlineKeyboardButton("📢 " + "اعلان عمومی",
+                                  callback_data=ADMIN_PUBLIC_ANNOUNCEMENT)],
+            [InlineKeyboardButton("❌🆕 " + "اعلان اتمام آپدیت ربات", callback_data=ADMIN_ANNOUNCE_END_OF_BOT_UPDATE), InlineKeyboardButton(
                 "🆕 " + "اعلان آپدیت ربات", callback_data=ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT),
-             InlineKeyboardButton("📢 " + "اعلان عمومی", callback_data=ADMIN_PUBLIC_ANNOUNCEMENT)],
+             ],
             [get_back_to_menu_button()]
         ]
     )
@@ -537,5 +539,33 @@ async def public_announcement_about_version_change(update: Update, ctx: ContextT
         text="اعلان آپدیت ربات با موفقیت انجام شدش، داپش",
         reply_markup=keyboard
     )
+
+    return AdminStates.ADMIN_ACTIONS
+
+
+async def announce_end_of_bot_update(update: Update, ctx: ContextTypes.DEFAULT_TYPE, message_sender):
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    await message_sender(text="در حال ارسال اعلان های آپدیت ربات، لطفا منتظر بمون و کار دیگه هم نکن...")
+
+    await public_announcer(f"ربات با موفقیت آپدیت شد، <b>اگه بعد آپدیت منویی برات باز نمیشه میتونی بات رو clear history کنی</b>", update, ctx, message_sender)
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "بازگشت به لیست کارای ادمینی", callback_data=BACK_TO_ADMIN_ACTIONS),
+            get_back_to_menu_button()
+        ]
+
+    ])
+
+    await message_sender(text="اعلان اتمام آپدیت ربات با موفقیت ارسال شد", reply_markup=keyboard)
 
     return AdminStates.ADMIN_ACTIONS

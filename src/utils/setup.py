@@ -23,7 +23,7 @@ from src.constants.commands import START, REGISTER, BACK_TO_MENU, EDIT, QUESTION
     ADMIN_TOGGLE_EDIT_INFO, HEAD_REMOVE_USER_FROM_TEAM, HEAD_REMOVE_TEAM_MEMBER_PREFIX,\
     HEAD_ADD_MEMBER_FROM_OTHER_TEAMS_PREFIX, HEAD_SHOW_USERS_TO_MEMBER_ADD_FROM_OTHER_TEAM_PREFIX,\
     EDIT_INFO_PREFIX, ADMIN_PUBLIC_ANNOUNCEMENT, ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT,\
-    ADMIN_NEXT_USERS_PAGE_PREFIX, ADMIN_PREV_USERS_PAGE_PREFIX
+    ADMIN_NEXT_USERS_PAGE_PREFIX, ADMIN_PREV_USERS_PAGE_PREFIX, ADMIN_ANNOUNCE_END_OF_BOT_UPDATE
 from src.constants.other import RegisterMode
 from src.constants.states import RegisterStates, EditStates, QuestionStates, StatStates,\
     AdminStates, TaskStates, HeadStates
@@ -34,7 +34,8 @@ from src.commands.questions import send_questions, answer_validator,\
     skip_question, quit_questions, prep_phase, show_question_boxes
 from src.commands.admin import show_admin_actions, register_admin, add_question_box, \
     show_users_list, add_head, show_users_list_buttons, show_heads_list_to_remove,\
-    remove_head, remove_user, toggle_edit_info, public_announcement, public_announcement_about_version_change
+    remove_head, remove_user, toggle_edit_info, public_announcement, public_announcement_about_version_change,\
+    announce_end_of_bot_update
 from src.commands.other import questions_history, back_to_menu, show_help, cleaner, error_handler
 from src.commands.stat import stat_decider, get_user_stat, show_question_box_stat
 from src.commands.head import show_head_actions, prompt_add_task, add_task,\
@@ -236,6 +237,10 @@ async def setup(
                 SuperCallbackQueryHandler(
                     public_announcement_about_version_change, ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT, guard="admin"
                 ),
+
+                SuperCallbackQueryHandler(
+                    announce_end_of_bot_update, ADMIN_ANNOUNCE_END_OF_BOT_UPDATE, guard="admin"
+                )
             ],
             AdminStates.PUBLIC_ANNOUNCEMENT: [
                 SuperMessageHandler(

@@ -21,6 +21,7 @@ ADMIN_SHOW_NONE_HEAD_LIST_TO_REMOVE = "admin_show_none_head_list_to_remove"
 ADMIN_TOGGLE_EDIT_INFO = "admin_toggle_edit_info"
 ADMIN_PUBLIC_ANNOUNCEMENT = "admin_public_announcement"
 ADMIN_PUBLIC_VERSION_CHANGE_ANNOUNCEMENT = "admin_public_version_change_announcement"
+ADMIN_ANNOUNCE_END_OF_BOT_UPDATE = "admin_announce_end_of_bot_update"
 
 HEAD_ADD_TASK = "head_add_task"
 HEAD_SHOW_MARKED_TASKS = "show_marked_tasks"
