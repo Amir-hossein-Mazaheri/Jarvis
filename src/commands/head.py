@@ -13,6 +13,7 @@ from src.utils.send_notification import send_notification
 from src.utils.get_user import get_user
 from src.utils.show_user import show_user
 from src.utils.get_teams_keyboard import get_teams_keyboard
+from src.utils.add_task_handler import add_task_handler
 from src.constants.states import HeadStates, AdminStates
 from src.constants.commands import ADMIN_PROMPT_ADD_QUESTION_BOX, HEAD_ADD_TASK,\
     HEAD_APPROVE_TASK_PREFIX, HEAD_SHOW_MARKED_TASKS, HEAD_SHOW_TASKS_TO_REMOVE,\
@@ -93,45 +94,7 @@ async def add_task(update: Update, ctx: ContextTypes, message_sender):
 
         return HeadStates.HEAD_ADD_TASK
 
-    async with db.batch_() as batcher:
-        for user_info in parsed_file:
-            user = await db.user.find_first(
-                where={
-                    "name": "@" + user_info["username"],
-                    "OR": [
-                        {
-                            "team": head.team
-                        },
-                        {
-                            "secondary_teams": {
-                                "has": head.team
-                            }
-                        }
-                    ]
-                }
-            )
-
-            if not bool(user):
-                continue
-
-            for task in user_info["tasks"]:
-                deadline = datetime.now() + \
-                    timedelta(days=int(task["deadline"]))
-
-                batcher.task.create(
-                    data={
-                        "job": task["job"],
-                        "weight": task["weight"],
-                        "deadline": deadline,
-                        "team": head.team,
-
-                        "user": {
-                            "connect": {
-                                "id": user.id
-                            }
-                        }
-                    }
-                )
+    await add_task_handler(parsed_file, head.team)
 
     await message_sender(text="تسک هایی که می خواستی ساخته شد", reply_markup=keyboard, edit=False)
 
