@@ -61,6 +61,10 @@ const useUsersStore = create(
 
     addUser(username) {
       set((store) => {
+        const duplicateUser = store.users.find((u) => u.username === username);
+
+        if (duplicateUser) return;
+
         store.users.unshift({
           username,
           tasks: [],

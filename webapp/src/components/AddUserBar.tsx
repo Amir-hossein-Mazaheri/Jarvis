@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import useSWR from "swr";
 import {
   Button,
   InputLabel,
@@ -9,39 +10,27 @@ import {
 import { shallow } from "zustand/shallow";
 
 import useUsersStore from "../store/useUsersStore";
+import { getUsers } from "../utils/get-users";
 
 const AddUserBar = () => {
-  const [serverUsers, setServerUsers] = useState([
-    {
-      username: "GGBoy313",
-      name: "Amirhossein Mazaheri",
-      studentCode: "40016763",
-    },
-    {
-      username: "Akbari12",
-      name: "Akbari",
-      studentCode: "40016763",
-    },
-    {
-      username: "ZerOne",
-      name: "Jesus Christ",
-      studentCode: "40016763",
-    },
-    {
-      username: "YasinD",
-      name: "Yasin",
-      studentCode: "40016763",
-    },
-  ]);
   const [selectedUser, setSelectedUser] = useState("");
+
+  const { data, error, isLoading } = useSWR("/team-users", getUsers);
 
   const { addUser } = useUsersStore((store) => store, shallow);
 
   const handleAddUser = () => {
     addUser(selectedUser);
     setSelectedUser("");
-    setServerUsers((users) => users.filter((u) => u.username !== selectedUser));
   };
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  if (!data) {
+    return <p>لودینگ...</p>;
+  }
 
   return (
     <div className="px-6 py-4 mb-12 shadow">
@@ -63,9 +52,9 @@ const AddUserBar = () => {
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
           >
-            {serverUsers.map(({ username, name, studentCode }) => (
+            {data.map(({ id, username, nickname }) => (
               <MenuItem key={username} value={username}>
-                {name}
+                {nickname}
               </MenuItem>
             ))}
           </Select>

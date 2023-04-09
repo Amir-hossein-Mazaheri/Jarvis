@@ -8,27 +8,14 @@ import { TextField, Button } from "@mui/material";
 import { Task as T } from "../store/useUsersStore";
 import useUsersStore from "../store/useUsersStore";
 import Task from "./Task";
+import AddTaskForm, { AddTaskOnSubmit } from "./AddTaskForm";
 
 interface UserProps {
   username: string;
   onDelete: (username: string) => void;
 }
 
-const addTaskSchema = z.object({
-  job: z.string().min(1),
-  weight: z.preprocess((value) => Number(value), z.number().positive()),
-  deadline: z.preprocess((value) => Number(value), z.number().positive()),
-});
-
 const User: React.FC<UserProps> = ({ username, onDelete }) => {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<z.infer<typeof addTaskSchema>>({
-    resolver: zodResolver(addTaskSchema),
-  });
-
   const { users, addTask, removeTask } = useUsersStore(
     (store) => store,
     shallow
@@ -39,9 +26,7 @@ const User: React.FC<UserProps> = ({ username, onDelete }) => {
     [users, username]
   );
 
-  const handleAddTask: SubmitHandler<z.infer<typeof addTaskSchema>> = (
-    data
-  ) => {
+  const handleAddTask: AddTaskOnSubmit = (data) => {
     addTask(username, data);
   };
 
@@ -76,66 +61,7 @@ const User: React.FC<UserProps> = ({ username, onDelete }) => {
         ))}
       </div>
 
-      <div>
-        <form className="space-y-8" onSubmit={handleSubmit(handleAddTask)}>
-          <Controller
-            name="job"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                id="job"
-                label="تسکت چیه..."
-                variant="standard"
-                error={!!errors["job"]}
-                helperText={errors["job"]?.message?.toString()}
-              />
-            )}
-          />
-
-          <div className="flex items-center gap-8">
-            <Controller
-              name="weight"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  id="weight"
-                  label="وزن تسک چقدره..."
-                  variant="standard"
-                  error={!!errors["weight"]}
-                  helperText={errors["weight"]?.message?.toString()}
-                />
-              )}
-            />
-
-            <Controller
-              name="deadline"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  id="deadline"
-                  type="number"
-                  label="ددلاین تسک چن روز دیگه اس..."
-                  variant="standard"
-                  error={!!errors["deadline"]}
-                  helperText={errors["deadline"]?.message?.toString()}
-                />
-              )}
-            />
-          </div>
-
-          <div className="flex items-center justify-end">
-            <Button variant="contained" type="submit">
-              افزودن تسک
-            </Button>
-          </div>
-        </form>
-      </div>
+      <AddTaskForm onSubmit={handleAddTask} />
     </div>
   );
 };
