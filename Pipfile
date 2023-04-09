@@ -32,6 +32,8 @@ persiantools = "*"
 pytz = "*"
 python-telegram-bot = {extras = ["webhooks"], version = "*"}
 aiofiles = "*"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
 
 [dev-packages]
 

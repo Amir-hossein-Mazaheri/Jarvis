@@ -2,6 +2,7 @@
     "cSpell.words": [
         "aiofiles",
         "dotenv",
+        "fastapi",
         "formkit",
         "hookform",
         "immer",
