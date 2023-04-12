@@ -1,4 +1,5 @@
 import os
+import re
 from telegram import Update, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 from prisma.enums import Team, UserRole
@@ -74,7 +75,7 @@ def register_student_code(mode: RegisterMode):
                 await message_sender(text="متاسفانه قابلیت ویرایش قفل شده است", reply_markup=await get_actions_keyboard(update, ctx))
                 return ConversationHandler.END
 
-        if len(student_code) != STUDENT_CODE_LENGTH:
+        if not re.match("^[0-9]*$", student_code):
             keyboard = InlineKeyboardMarkup(
                 [
                     [get_back_to_menu_button()]
