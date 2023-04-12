@@ -27,8 +27,6 @@ def main():
             listen="0.0.0.0",
             port=8443,
             secret_token=os.getenv("BOT_SECRET"),
-            key="private.key",
-            cert="cert.pem",
             webhook_url=os.getenv("SERVER_IP")
         )
     else:

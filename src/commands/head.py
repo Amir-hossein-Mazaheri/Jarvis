@@ -54,8 +54,12 @@ async def show_head_actions(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mess
 
 
 async def prompt_add_task(update: Update, ctx: ContextTypes, message_sender):
+    user = await get_user(update.effective_user.id)
+    webapp = os.getenv("WEBAPP").rstrip("/")
+    print(webapp)
+    url = f"{webapp}?id={user.tel_id}"
     keyboard = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("ساخت فایل با بیلدر", url=os.getenv("WEBAPP"))],
+        [[InlineKeyboardButton("ساخت فایل با بیلدر", url=url)],
          *get_head_common_keyboard(return_keyboard=False)]
     )
 
