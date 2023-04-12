@@ -42,7 +42,7 @@ async def add_task_handler(parsed_file, team: Team):
                 where={
                     "name": {
                         "mode": "insensitive",
-                        "equals": "@" + user_info["username"]
+                        "equals": "@" + user_info["username"].lstrip("@")
                     },
                     "OR": [
                         {
