@@ -1,5 +1,14 @@
 # Versions Details
 
+## version 0.9.2 beta
+
+Changes since the last version:
+
+<ul>
+    <li>Added Webapp front-end for building json files for tasks</li>
+    <li>Added a simple REST api back-end to serve each team members</li>
+</ul>
+
 ## version 0.8.3 beta
 
 Changes since the last version:
