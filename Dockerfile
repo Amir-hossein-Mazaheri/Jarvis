@@ -52,7 +52,7 @@ ENV MODE=production
 
 EXPOSE 8000
 
-ENV SERVER_IP=bot.amirhossein-mazaheri.ir:8443
+ENV SERVER_IP=hook.amirhossein-mazaheri.ir
 
 ENV WEBAPP=bot.amirhossein-mazaheri.ir
 
