@@ -3,7 +3,6 @@ import { Button } from "@mui/material";
 import { shallow } from "zustand/shallow";
 
 import useUsersStore from "../store/useUsersStore";
-import { telegram } from "../App";
 import useTasksStore from "../store/useTasksStore";
 
 const Publish = () => {
@@ -40,10 +39,6 @@ const Publish = () => {
 
       downloadBtnRef.current.click();
     }
-
-    telegram.sendData({
-      data: users,
-    });
   };
 
   return (

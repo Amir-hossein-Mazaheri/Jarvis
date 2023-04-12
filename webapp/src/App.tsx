@@ -14,18 +14,8 @@ import useTasksStore, { TaskType } from "./store/useTasksStore";
 import { shallow } from "zustand/shallow";
 import Tasks from "./components/Tasks";
 
-// @ts-ignore
-export const telegram = window.Telegram.WebApp;
-
-console.log("\n\ntelegram: \n", telegram, "\n\n");
-
 const App = () => {
   const { all, setAll } = useTasksStore((store) => store, shallow);
-
-  useEffect(() => {
-    telegram.ready();
-    telegram.BackButton.show();
-  }, []);
 
   return (
     <div className="px-24 py-16 w-full min-h-screen">
