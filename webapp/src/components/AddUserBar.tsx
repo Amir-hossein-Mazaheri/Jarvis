@@ -49,13 +49,11 @@ const AddUserBar = () => {
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
           >
-            {[{ id: 1, username: "hell", nickname: "Cool" }].map(
-              ({ id, username, nickname }) => (
-                <MenuItem key={id} value={JSON.stringify([username, nickname])}>
-                  {nickname}
-                </MenuItem>
-              )
-            )}
+            {data.map(({ id, username, nickname }) => (
+              <MenuItem key={id} value={JSON.stringify([username, nickname])}>
+                {nickname}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
