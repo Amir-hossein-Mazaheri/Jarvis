@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { persist } from "zustand/middleware";
 
 import { Task } from "./useUsersStore";
 
@@ -22,31 +23,36 @@ const initialState: InitialState = {
 };
 
 const useTasksStore = create(
-  immer<UseTasksStore>((set) => ({
-    ...initialState,
+  persist(
+    immer<UseTasksStore>((set) => ({
+      ...initialState,
 
-    setAll(all) {
-      set((store) => {
-        store.all = all;
-      });
-    },
+      setAll(all) {
+        set((store) => {
+          store.all = all;
+        });
+      },
 
-    addTask(task) {
-      set((store) => {
-        const duplicateTask = store.tasks.find((t) => t.job === task.job);
+      addTask(task) {
+        set((store) => {
+          const duplicateTask = store.tasks.find((t) => t.job === task.job);
 
-        if (duplicateTask) return;
+          if (duplicateTask) return;
 
-        store.tasks.push(task);
-      });
-    },
+          store.tasks.push(task);
+        });
+      },
 
-    removeTask(task) {
-      set((store) => {
-        store.tasks = store.tasks.filter((t) => t.job !== task.job);
-      });
-    },
-  }))
+      removeTask(task) {
+        set((store) => {
+          store.tasks = store.tasks.filter((t) => t.job !== task.job);
+        });
+      },
+    })),
+    {
+      name: "jarvis-tasks",
+    }
+  )
 );
 
 export default useTasksStore;

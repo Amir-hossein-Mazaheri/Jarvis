@@ -18,7 +18,7 @@ const App = () => {
   const { all, setAll } = useTasksStore((store) => store, shallow);
 
   return (
-    <div className="px-24 py-16 w-full min-h-screen">
+    <div className="lg:px-24 lg:py-16 px-6 py-6 w-full min-h-screen">
       <FormControl sx={{ my: "1.25rem" }}>
         <FormLabel id="select-task-type">نوع تسک</FormLabel>
         <RadioGroup

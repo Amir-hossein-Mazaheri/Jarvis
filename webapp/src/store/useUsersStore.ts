@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { persist } from "zustand/middleware";
 
 export type Task = {
   job: string;
@@ -8,6 +9,7 @@ export type Task = {
 };
 
 export type User = {
+  nickname: string;
   username: string;
   tasks: Task[];
 };
@@ -17,7 +19,7 @@ interface InitialState {
 }
 
 interface UseUsersStore extends InitialState {
-  addUser: (username: string) => void;
+  addUser: (username: string, nickname: string) => void;
   removeUser: (username: string) => void;
   addTask: (username: string, task: Task) => void;
   removeTask: (username: string, task: Task) => void;
@@ -28,56 +30,66 @@ const initialState: InitialState = {
 };
 
 const useUsersStore = create(
-  immer<UseUsersStore>((set) => ({
-    ...initialState,
+  persist(
+    immer<UseUsersStore>((set) => ({
+      ...initialState,
 
-    addTask(username, task) {
-      set((store) => {
-        const userIndex = store.users.findIndex(
-          (user) => user.username === username
-        );
+      addTask(username, task) {
+        set((store) => {
+          const userIndex = store.users.findIndex(
+            (user) => user.username === username
+          );
 
-        const duplicateTask = store.users[userIndex].tasks.find(
-          (t) => t.job === task.job
-        );
+          const duplicateTask = store.users[userIndex].tasks.find(
+            (t) => t.job === task.job
+          );
 
-        if (duplicateTask) return;
+          if (duplicateTask) return;
 
-        store.users[userIndex].tasks.push(task);
-      });
-    },
-
-    removeTask(username, task) {
-      set((store) => {
-        const userIndex = store.users.findIndex(
-          (user) => user.username === username
-        );
-
-        store.users[userIndex].tasks = store.users[userIndex].tasks.filter(
-          (t) => t.job !== task.job
-        );
-      });
-    },
-
-    addUser(username) {
-      set((store) => {
-        const duplicateUser = store.users.find((u) => u.username === username);
-
-        if (duplicateUser) return;
-
-        store.users.unshift({
-          username,
-          tasks: [],
+          store.users[userIndex].tasks.push(task);
         });
-      });
-    },
+      },
 
-    removeUser(username) {
-      set((store) => {
-        store.users = store.users.filter((user) => user.username !== username);
-      });
-    },
-  }))
+      removeTask(username, task) {
+        set((store) => {
+          const userIndex = store.users.findIndex(
+            (user) => user.username === username
+          );
+
+          store.users[userIndex].tasks = store.users[userIndex].tasks.filter(
+            (t) => t.job !== task.job
+          );
+        });
+      },
+
+      addUser(username, nickname) {
+        set((store) => {
+          const duplicateUser = store.users.find(
+            (u) => u.username === username
+          );
+
+          if (duplicateUser) return;
+
+          store.users.unshift({
+            nickname,
+            username,
+            tasks: [],
+          });
+        });
+      },
+
+      removeUser(username) {
+        set((store) => {
+          store.users = store.users.filter(
+            (user) => user.username !== username
+          );
+        });
+      },
+    })),
+    {
+      name: "jarvis-users",
+    }
+  )
 );
 
 export default useUsersStore;

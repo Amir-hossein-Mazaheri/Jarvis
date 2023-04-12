@@ -8,7 +8,7 @@ export type ServerUser = {
 export async function getUsers() {
   const url = new URL(window.location.toString());
   const headId = Number(url.searchParams.get("id"));
-  const res = await fetch(`/teams/${headId}`, {
+  const res = await fetch(`${import.meta.env.VITE_BASE_URL}/teams/${headId}`, {
     method: "GET",
   });
 

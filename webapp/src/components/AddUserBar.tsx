@@ -20,12 +20,13 @@ const AddUserBar = () => {
   const { addUser } = useUsersStore((store) => store, shallow);
 
   const handleAddUser = () => {
-    addUser(selectedUser);
+    const [username, nickname] = JSON.parse(selectedUser);
+    addUser(username, nickname);
     setSelectedUser("");
   };
 
   if (error) {
-    return <p>{error}</p>;
+    return <p>{JSON.stringify(error)}</p>;
   }
 
   if (!data) {
@@ -36,12 +37,8 @@ const AddUserBar = () => {
     <div className="px-6 py-4 mb-12 shadow">
       <h2 className="text-2xl font-bold mb-6">افزودن کاربر</h2>
 
-      <div className="flex items-center gap-8">
-        <FormControl
-          className="basis-4/5"
-          variant="standard"
-          sx={{ m: 1, minWidth: 120 }}
-        >
+      <div className="flex md:flex-row flex-col items-center gap-8">
+        <FormControl fullWidth className="basis-4/5" variant="standard">
           <InputLabel id="demo-simple-select-filled-label">
             انتخاب کاربر
           </InputLabel>
@@ -52,15 +49,18 @@ const AddUserBar = () => {
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
           >
-            {data.map(({ id, username, nickname }) => (
-              <MenuItem key={username} value={username}>
-                {nickname}
-              </MenuItem>
-            ))}
+            {[{ id: 1, username: "hell", nickname: "Cool" }].map(
+              ({ id, username, nickname }) => (
+                <MenuItem key={id} value={JSON.stringify([username, nickname])}>
+                  {nickname}
+                </MenuItem>
+              )
+            )}
           </Select>
         </FormControl>
 
         <Button
+          fullWidth
           variant="contained"
           size="large"
           onClick={handleAddUser}

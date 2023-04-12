@@ -44,7 +44,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onSubmit }) => {
           )}
         />
 
-        <div className="flex items-center gap-8">
+        <div className="flex md:flex-row flex-col items-center gap-8">
           <Controller
             name="weight"
             control={control}
@@ -80,7 +80,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onSubmit }) => {
         </div>
 
         <div className="flex items-center justify-end">
-          <Button variant="contained" type="submit">
+          <Button variant="contained" type="submit" className="w-full lg:w-fit">
             افزودن تسک
           </Button>
         </div>

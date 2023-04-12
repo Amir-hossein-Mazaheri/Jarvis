@@ -11,11 +11,12 @@ import Task from "./Task";
 import AddTaskForm, { AddTaskOnSubmit } from "./AddTaskForm";
 
 interface UserProps {
+  nickname: string;
   username: string;
   onDelete: (username: string) => void;
 }
 
-const User: React.FC<UserProps> = ({ username, onDelete }) => {
+const User: React.FC<UserProps> = ({ nickname, username, onDelete }) => {
   const { users, addTask, removeTask } = useUsersStore(
     (store) => store,
     shallow
@@ -35,14 +36,19 @@ const User: React.FC<UserProps> = ({ username, onDelete }) => {
   };
 
   return (
-    <div className="border px-12 py-8 rounded-xl">
-      <div className="flex items-center justify-between rounded-lg mb-6 border px-6 py-2">
+    <div className="border md:px-12 px-8 md:py-8 py-6 rounded-xl">
+      <h3 className="mb-5 font-extrabold md:text-xl text-lg text-right">
+        {nickname}
+      </h3>
+
+      <div className="flex items-center justify-between rounded-lg mb-6 border md:px-6 px-4 py-2">
         <p>
-          <span>نام کاربری: </span>
+          <span className="hidden md:inline">نام کاربری: </span>
           <span>{username}</span>
         </p>
 
         <Button
+          size="small"
           variant="outlined"
           color="error"
           onClick={() => onDelete(username)}

@@ -17,10 +17,11 @@ const Users = () => {
   return (
     <div>
       <div className="space-y-12" ref={usersParent}>
-        {users.map(({ username }) => (
+        {users.map(({ username, nickname }) => (
           <User
             key={username}
             username={username}
+            nickname={nickname}
             onDelete={handleRemoveUser}
           />
         ))}
