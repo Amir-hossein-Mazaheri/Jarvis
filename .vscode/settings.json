@@ -13,6 +13,7 @@
         "pytz",
         "questionsbox",
         "stylis",
+        "uvicorn",
         "zustand"
     ]
 }
