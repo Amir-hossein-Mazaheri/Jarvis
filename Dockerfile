@@ -1,4 +1,20 @@
-FROM python:3.11-slim-bullseye
+FROM node:16.17.0-alpine AS deps
+
+WORKDIR /app
+
+RUN npm i -g pnpm
+
+COPY webapp/package.json webapp/pnpm-lock.yaml ./
+
+RUN pnpm install 
+
+COPY webapp ./
+
+RUN pnpm build
+
+
+
+FROM python:3.11-slim-bullseye as server
 
 WORKDIR /app
 
@@ -26,10 +42,14 @@ RUN prisma generate
 
 COPY ./ ./
 
+COPY --from=deps /app/dist ./webapp/dist
+
 RUN chmod +x run_bot.bash
 
 ENV BOT_NAME=Jarvis
 
 ENV MODE=production
+
+EXPOSE 8000
 
 CMD [ "./run_bot.bash" ]

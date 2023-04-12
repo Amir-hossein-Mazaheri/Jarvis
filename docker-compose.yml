@@ -4,6 +4,8 @@ services:
   bot:
     build: ./
     restart: on-failure
+    depends_on:
+      - db
     secrets:
       - db
       - db_user
@@ -13,6 +15,15 @@ services:
       - server_ip
     volumes:
       - bot_data:/app/data
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: host
+      - target: 8443
+        published: 8443
+        protocol: tcp
+        mode: host
   db:
     image: postgres:15.1-alpine
     restart: always
