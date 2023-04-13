@@ -33,7 +33,9 @@ const Publish = () => {
 
     if (downloadBtnRef.current) {
       downloadBtnRef.current.href = `data:application/json;charset:utf-8,${JSON.stringify(
-        all === "all" ? { tasks } : users
+        all === "all"
+          ? { tasks }
+          : users.map(({ username, tasks }) => ({ username, tasks }))
       )}`;
       downloadBtnRef.current.download = "tasks.json";
 
