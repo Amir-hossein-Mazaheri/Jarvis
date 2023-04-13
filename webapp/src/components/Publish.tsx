@@ -32,14 +32,23 @@ const Publish = () => {
     setShow(true);
 
     if (downloadBtnRef.current) {
-      downloadBtnRef.current.href = `data:application/json;charset:utf-8,${JSON.stringify(
-        all === "all"
-          ? { tasks }
-          : users.map(({ username, tasks }) => ({ username, tasks }))
-      )}`;
+      const taskBlob = new Blob(
+        [
+          JSON.stringify(
+            all === "all"
+              ? { tasks }
+              : users.map(({ username, tasks }) => ({ username, tasks }))
+          ),
+        ],
+        { type: "application/json" }
+      );
+
+      downloadBtnRef.current.href = URL.createObjectURL(taskBlob);
       downloadBtnRef.current.download = "tasks.json";
 
       downloadBtnRef.current.click();
+
+      URL.revokeObjectURL(downloadBtnRef.current.href);
     }
 
     all === "all" ? clearTasks() : clearUsers();
