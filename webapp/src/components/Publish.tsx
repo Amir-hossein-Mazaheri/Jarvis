@@ -11,8 +11,8 @@ const Publish = () => {
 
   const downloadBtnRef = useRef<HTMLAnchorElement>(null);
 
-  const { users } = useUsersStore((store) => store, shallow);
-  const { all, tasks } = useTasksStore((store) => store, shallow);
+  const { users, clearUsers } = useUsersStore((store) => store, shallow);
+  const { all, tasks, clearTasks } = useTasksStore((store) => store, shallow);
 
   const handlePublish = () => {
     if (all === "specified") {
@@ -41,6 +41,8 @@ const Publish = () => {
 
       downloadBtnRef.current.click();
     }
+
+    all === "all" ? clearTasks() : clearUsers();
   };
 
   return (

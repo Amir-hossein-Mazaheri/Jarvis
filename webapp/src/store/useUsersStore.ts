@@ -23,6 +23,8 @@ interface UseUsersStore extends InitialState {
   removeUser: (username: string) => void;
   addTask: (username: string, task: Task) => void;
   removeTask: (username: string, task: Task) => void;
+  clearTasks: (username: string) => void;
+  clearUsers: () => void;
 }
 
 const initialState: InitialState = {
@@ -83,6 +85,22 @@ const useUsersStore = create(
           store.users = store.users.filter(
             (user) => user.username !== username
           );
+        });
+      },
+
+      clearTasks(username) {
+        set((store) => {
+          const userIndex = store.users.findIndex(
+            (user) => user.username === username
+          );
+
+          store.users[userIndex].tasks = [];
+        });
+      },
+
+      clearUsers() {
+        set((store) => {
+          store.users = [];
         });
       },
     })),

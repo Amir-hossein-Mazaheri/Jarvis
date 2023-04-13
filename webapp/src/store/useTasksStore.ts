@@ -15,6 +15,7 @@ interface UseTasksStore extends InitialState {
   addTask: (task: Task) => void;
   removeTask: (task: Task) => void;
   setAll: (all: TaskType) => void;
+  clearTasks: () => void;
 }
 
 const initialState: InitialState = {
@@ -46,6 +47,12 @@ const useTasksStore = create(
       removeTask(task) {
         set((store) => {
           store.tasks = store.tasks.filter((t) => t.job !== task.job);
+        });
+      },
+
+      clearTasks() {
+        set((store) => {
+          store.tasks = [];
         });
       },
     })),
