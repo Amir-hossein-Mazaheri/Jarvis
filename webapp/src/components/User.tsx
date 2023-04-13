@@ -1,9 +1,7 @@
 import React, { useMemo } from "react";
 import { shallow } from "zustand/shallow";
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import z from "zod";
-import { TextField, Button } from "@mui/material";
+import { Button } from "@mui/material";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 import { Task as T } from "../store/useUsersStore";
 import useUsersStore from "../store/useUsersStore";
@@ -21,6 +19,8 @@ const User: React.FC<UserProps> = ({ nickname, username, onDelete }) => {
     (store) => store,
     shallow
   );
+
+  const [tasksParent] = useAutoAnimate<HTMLDivElement>();
 
   const getUserTasks = useMemo(
     () => users.find((u) => u.username === username)?.tasks,
@@ -57,7 +57,7 @@ const User: React.FC<UserProps> = ({ nickname, username, onDelete }) => {
         </Button>
       </div>
 
-      <div className="mt-6 mb-12 space-y-6">
+      <div ref={tasksParent} className="mt-6 mb-12 space-y-6">
         {getUserTasks?.map((task) => (
           <Task
             key={JSON.stringify(task)}

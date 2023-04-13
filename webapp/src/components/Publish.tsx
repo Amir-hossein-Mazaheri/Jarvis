@@ -7,7 +7,6 @@ import useTasksStore from "../store/useTasksStore";
 
 const Publish = () => {
   const [error, setError] = useState("");
-  const [show, setShow] = useState(false);
 
   const downloadBtnRef = useRef<HTMLAnchorElement>(null);
 
@@ -29,7 +28,6 @@ const Publish = () => {
     }
 
     setError("");
-    setShow(true);
 
     if (downloadBtnRef.current) {
       const taskBlob = new Blob(
