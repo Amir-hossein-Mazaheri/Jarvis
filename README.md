@@ -1,4 +1,4 @@
-# Versions Detail
+# Versions Details
 
 ## version 0.9.2 beta
 
